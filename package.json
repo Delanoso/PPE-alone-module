@@ -1,0 +1,20 @@
+{
+  "name": "hfr-ppe-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @hfr/ppe-shared && npm run build -w @hfr/ppe-api && npm run build -w @hfr/ppe-web",
+    "dev": "concurrently \"npm run dev -w @hfr/ppe-api\" \"npm run dev -w @hfr/ppe-web\"",
+    "dev:api": "npm run dev -w @hfr/ppe-api",
+    "dev:web": "npm run dev -w @hfr/ppe-web",
+    "lint": "npm run lint -w @hfr/ppe-api && npm run lint -w @hfr/ppe-web",
+    "typecheck": "npm run typecheck -w @hfr/ppe-shared && npm run typecheck -w @hfr/ppe-api && npm run typecheck -w @hfr/ppe-web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+build/
+coverage/
+
+# local envs
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# misc
+*.tsbuildinfo
+apps/api/prisma/dev.db
+apps/api/prisma/dev.db-journal

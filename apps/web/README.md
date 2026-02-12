@@ -1,22 +1,27 @@
-# Web Application Placeholder
+# HFR PPE Web App
 
-This folder is reserved for frontend web implementation.
+Responsive React web client for mobile, tablet, and laptop usage.
 
-Suggested stack:
+## Stack
 
-- React + TypeScript
-- Vite or Next.js
-- Tailwind CSS or component library
-- React Query / SWR for data fetching
-- Form validation with Zod + React Hook Form
+- React + TypeScript + Vite
+- Material UI (responsive components and breakpoints)
+- React Router
+- TanStack Query
+- React Hook Form + Zod
+- Axios + Zustand
 
-Suggested page groups:
+## Main Views
 
-- `/auth`
-- `/dashboard`
-- `/people`
-- `/ppe`
-- `/stock`
-- `/issues`
-- `/reports`
-- `/admin`
+- Login and registration
+- Dashboard
+- People management with size updates and delete action
+- PPE inventory and stock movement capture
+- PPE issue and remote signature link dispatch
+- Public signature confirmation page
+
+## Local Run
+
+1. Set `VITE_API_URL` in root `.env`.
+2. Run web app:
+   - `npm run dev -w @hfr/ppe-web`

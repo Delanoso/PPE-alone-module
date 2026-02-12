@@ -1,0 +1,406 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmploymentStatus {
+  active
+  inactive
+  terminated
+  suspended
+}
+
+enum IssueStatus {
+  draft
+  pending_signature
+  signed
+  cancelled
+}
+
+enum SignatureMode {
+  in_person
+  remote
+}
+
+enum TokenStatus {
+  created
+  sent
+  opened
+  signed
+  expired
+  revoked
+}
+
+enum MovementType {
+  receipt
+  issue
+  adjustment
+  return
+}
+
+enum NotificationChannel {
+  whatsapp
+  email
+  sms
+}
+
+enum NotificationStatus {
+  queued
+  sent
+  delivered
+  failed
+  read
+}
+
+model Role {
+  id              String           @id @default(uuid())
+  roleCode        String           @unique
+  roleName        String           @unique
+  description     String?
+  users           User[]
+  rolePermissions RolePermission[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Permission {
+  id              String           @id @default(uuid())
+  permissionCode  String           @unique
+  permissionName  String
+  description     String?
+  rolePermissions RolePermission[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id                  String            @id @default(uuid())
+  roleId              String
+  role                Role              @relation(fields: [roleId], references: [id])
+  fullName            String
+  email               String            @unique
+  employeeNo          String?           @unique
+  passwordHash        String
+  isActive            Boolean           @default(true)
+  failedLoginAttempts Int               @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  deletedAt           DateTime?
+  peopleSizesUpdated  PersonSizeProfile[]
+  issuesIssued        IssueTransaction[] @relation("IssuesIssuedByUser")
+  issuesCancelled     IssueTransaction[] @relation("IssuesCancelledByUser")
+  stockMovements      StockMovement[]
+  signatureTokens     SignatureToken[]
+  auditLogs           AuditLog[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model Department {
+  id             String          @id @default(uuid())
+  departmentCode String          @unique
+  departmentName String          @unique
+  isActive       Boolean         @default(true)
+  subDepartments SubDepartment[]
+  people         Person[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model SubDepartment {
+  id                String      @id @default(uuid())
+  departmentId      String
+  department        Department  @relation(fields: [departmentId], references: [id])
+  subDepartmentCode String
+  subDepartmentName String
+  isActive          Boolean     @default(true)
+  people            Person[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@unique([departmentId, subDepartmentCode])
+  @@unique([departmentId, subDepartmentName])
+}
+
+model JobTitle {
+  id           String   @id @default(uuid())
+  jobTitleCode String   @unique
+  jobTitleName String   @unique
+  isActive     Boolean  @default(true)
+  people       Person[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Person {
+  id               String            @id @default(uuid())
+  employeeNo       String            @unique
+  firstName        String
+  lastName         String
+  idNumber         String?
+  mobileNumber     String
+  email            String?
+  departmentId     String
+  subDepartmentId  String
+  jobTitleId       String?
+  employmentStatus EmploymentStatus  @default(active)
+  hireDate         DateTime?
+  terminationDate  DateTime?
+  notes            String?
+  deletedAt        DateTime?
+  department       Department        @relation(fields: [departmentId], references: [id])
+  subDepartment    SubDepartment     @relation(fields: [subDepartmentId], references: [id])
+  jobTitle         JobTitle?         @relation(fields: [jobTitleId], references: [id])
+  sizes            PersonSizeProfile[]
+  issues           IssueTransaction[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model PersonSizeProfile {
+  id         String   @id @default(uuid())
+  personId   String
+  sizeType   String
+  sizeValue  String
+  updatedBy  String?
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  updatedByUser User? @relation(fields: [updatedBy], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([personId, sizeType])
+}
+
+model PpeCategory {
+  id           String    @id @default(uuid())
+  categoryCode String    @unique
+  categoryName String    @unique
+  isActive     Boolean   @default(true)
+  items        PpeItem[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model PpeItem {
+  id                   String       @id @default(uuid())
+  categoryId           String
+  itemCode             String       @unique
+  itemName             String
+  description          String?
+  replacementCycleDays Int?
+  isMandatory          Boolean      @default(true)
+  isActive             Boolean      @default(true)
+  category             PpeCategory  @relation(fields: [categoryId], references: [id])
+  variants             PpeVariant[]
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+}
+
+model PpeVariant {
+  id            String        @id @default(uuid())
+  ppeItemId     String
+  variantCode   String        @unique
+  sizeValue     String
+  color         String?
+  uom           String        @default("unit")
+  minStockLevel Decimal       @default(0)
+  isActive      Boolean       @default(true)
+  ppeItem       PpeItem       @relation(fields: [ppeItemId], references: [id])
+  stockMovements StockMovement[]
+  issueLines    IssueLine[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Location {
+  id            String           @id @default(uuid())
+  locationCode  String           @unique
+  locationName  String           @unique
+  locationType  String           @default("warehouse")
+  isActive      Boolean          @default(true)
+  stockMovements StockMovement[]
+  issues        IssueTransaction[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model Supplier {
+  id           String          @id @default(uuid())
+  supplierCode String          @unique
+  supplierName String          @unique
+  contactName  String?
+  phone        String?
+  email        String?
+  isActive     Boolean         @default(true)
+  movements    StockMovement[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model IssueTransaction {
+  id                String          @id @default(uuid())
+  issueNo           String          @unique
+  personId          String
+  issuedByUserId    String
+  locationId        String
+  issueDate         DateTime        @default(now())
+  issueStatus       IssueStatus     @default(draft)
+  signatureMode     SignatureMode
+  notes             String?
+  signedAt          DateTime?
+  cancelledAt       DateTime?
+  cancelledByUserId String?
+  person            Person          @relation(fields: [personId], references: [id])
+  issuedByUser      User            @relation("IssuesIssuedByUser", fields: [issuedByUserId], references: [id])
+  cancelledByUser   User?           @relation("IssuesCancelledByUser", fields: [cancelledByUserId], references: [id])
+  location          Location        @relation(fields: [locationId], references: [id])
+  lines             IssueLine[]
+  signatureTokens   SignatureToken[]
+  signatureRecord   SignatureRecord?
+  notifications     NotificationLog[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model IssueLine {
+  id                 String           @id @default(uuid())
+  issueTransactionId String
+  ppeVariantId       String
+  quantity           Decimal
+  conditionNote      String?
+  issueTransaction   IssueTransaction @relation(fields: [issueTransactionId], references: [id], onDelete: Cascade)
+  ppeVariant         PpeVariant       @relation(fields: [ppeVariantId], references: [id])
+  createdAt          DateTime         @default(now())
+
+  @@unique([issueTransactionId, ppeVariantId])
+}
+
+model StockMovement {
+  id              String       @id @default(uuid())
+  ppeVariantId    String
+  locationId      String
+  supplierId      String?
+  movementType    MovementType
+  quantity        Decimal
+  unitCost        Decimal?
+  reasonCode      String?
+  referenceType   String?
+  referenceId     String?
+  movementDate    DateTime     @default(now())
+  createdByUserId String?
+  notes           String?
+  variant         PpeVariant   @relation(fields: [ppeVariantId], references: [id])
+  location        Location     @relation(fields: [locationId], references: [id])
+  supplier        Supplier?    @relation(fields: [supplierId], references: [id])
+  createdByUser   User?        @relation(fields: [createdByUserId], references: [id])
+  createdAt       DateTime     @default(now())
+}
+
+model SignatureToken {
+  id                 String          @id @default(uuid())
+  issueTransactionId String
+  tokenHash          String          @unique
+  tokenStatus        TokenStatus     @default(created)
+  expiresAt          DateTime
+  maxAttempts        Int             @default(5)
+  currentAttempts    Int             @default(0)
+  sentAt             DateTime?
+  openedAt           DateTime?
+  signedAt           DateTime?
+  revokedAt          DateTime?
+  createdByUserId    String?
+  issueTransaction   IssueTransaction @relation(fields: [issueTransactionId], references: [id], onDelete: Cascade)
+  createdByUser      User?           @relation(fields: [createdByUserId], references: [id])
+  signatureRecord    SignatureRecord?
+  notifications      NotificationLog[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model SignatureRecord {
+  id                 String          @id @default(uuid())
+  issueTransactionId String          @unique
+  signatureTokenId   String?         @unique
+  signatureType      String
+  signaturePayloadUri String
+  signerName         String
+  signerMobile       String
+  ipAddress          String?
+  userAgent          String?
+  signedAt           DateTime        @default(now())
+  issueTransaction   IssueTransaction @relation(fields: [issueTransactionId], references: [id], onDelete: Cascade)
+  signatureToken     SignatureToken? @relation(fields: [signatureTokenId], references: [id])
+  createdAt          DateTime        @default(now())
+}
+
+model NotificationLog {
+  id                 String              @id @default(uuid())
+  channel            NotificationChannel
+  recipient          String
+  templateCode       String
+  providerMessageId  String?
+  status             NotificationStatus  @default(queued)
+  payloadJson        Json?
+  responseJson       Json?
+  issueTransactionId String?
+  signatureTokenId   String?
+  issueTransaction   IssueTransaction?   @relation(fields: [issueTransactionId], references: [id])
+  signatureToken     SignatureToken?     @relation(fields: [signatureTokenId], references: [id])
+  sentAt             DateTime?
+  deliveredAt        DateTime?
+  failedAt           DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model DropdownGroup {
+  id          String          @id @default(uuid())
+  groupCode   String          @unique
+  groupName   String
+  description String?
+  options     DropdownOption[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model DropdownOption {
+  id          String         @id @default(uuid())
+  groupId     String
+  optionCode  String
+  optionLabel String
+  sortOrder   Int            @default(100)
+  isActive    Boolean        @default(true)
+  group       DropdownGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([groupId, optionCode])
+}
+
+model AuditLog {
+  id          BigInt    @id @default(autoincrement())
+  actorUserId String?
+  action      String
+  entityName  String
+  entityId    String?
+  beforeJson  Json?
+  afterJson   Json?
+  ipAddress   String?
+  userAgent   String?
+  actorUser   User?     @relation(fields: [actorUserId], references: [id])
+  createdAt   DateTime  @default(now())
+}
