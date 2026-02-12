@@ -1,0 +1,756 @@
+openapi: 3.0.3
+info:
+  title: HFR PPE Issue Management API
+  version: 1.0.0
+  description: >
+    API specification for HFR Schafer Vervoer PPE issue platform.
+servers:
+  - url: https://api.hfr-schafer.example/api/v1
+    description: Production
+  - url: http://localhost:4000/api/v1
+    description: Local
+tags:
+  - name: Auth
+  - name: Users
+  - name: Organization
+  - name: People
+  - name: PPE
+  - name: Stock
+  - name: Issues
+  - name: Signature
+  - name: Reports
+  - name: Dashboard
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Auth tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: New auth tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+    post:
+      tags: [Users]
+      summary: Create user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User created
+
+  /departments:
+    get:
+      tags: [Organization]
+      summary: List departments
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Department list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Department"
+
+  /departments/{departmentId}/sub-departments:
+    get:
+      tags: [Organization]
+      summary: List sub-departments by department
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: departmentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Sub-department list
+
+  /people:
+    get:
+      tags: [People]
+      summary: List people
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: departmentId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive, terminated, deleted]
+      responses:
+        "200":
+          description: People list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonListResponse"
+    post:
+      tags: [People]
+      summary: Create person
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonRequest"
+      responses:
+        "201":
+          description: Person created
+
+  /people/{personId}:
+    get:
+      tags: [People]
+      summary: Get person
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Person details
+    patch:
+      tags: [People]
+      summary: Update person
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePersonRequest"
+      responses:
+        "200":
+          description: Person updated
+    delete:
+      tags: [People]
+      summary: Soft-delete person
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Person deleted
+
+  /people/{personId}/sizes:
+    put:
+      tags: [People]
+      summary: Replace person size profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sizes]
+              properties:
+                sizes:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/SizeProfileItem"
+      responses:
+        "200":
+          description: Size profile updated
+
+  /ppe/items:
+    get:
+      tags: [PPE]
+      summary: List PPE items
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: PPE items
+    post:
+      tags: [PPE]
+      summary: Create PPE item
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePPEItemRequest"
+      responses:
+        "201":
+          description: PPE item created
+
+  /ppe/variants:
+    get:
+      tags: [PPE]
+      summary: List PPE variants
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: PPE variants
+    post:
+      tags: [PPE]
+      summary: Create PPE variant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePPEVariantRequest"
+      responses:
+        "201":
+          description: PPE variant created
+
+  /stock/movements:
+    get:
+      tags: [Stock]
+      summary: List stock movements
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Stock movement list
+    post:
+      tags: [Stock]
+      summary: Create stock movement
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStockMovementRequest"
+      responses:
+        "201":
+          description: Stock movement created
+
+  /stock/balances:
+    get:
+      tags: [Stock]
+      summary: Get stock balances by variant/location
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Calculated balances
+
+  /issues:
+    get:
+      tags: [Issues]
+      summary: List issue transactions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Issue list
+    post:
+      tags: [Issues]
+      summary: Create issue transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIssueRequest"
+      responses:
+        "201":
+          description: Issue created
+
+  /issues/{issueId}:
+    get:
+      tags: [Issues]
+      summary: Get issue transaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: issueId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Issue details
+    patch:
+      tags: [Issues]
+      summary: Update issue status or metadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: issueId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                issueStatus:
+                  type: string
+                  enum: [draft, pending_signature, signed, cancelled]
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Issue updated
+
+  /issues/{issueId}/send-signature-link:
+    post:
+      tags: [Signature]
+      summary: Send WhatsApp signing link
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: issueId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mobileNumber:
+                  type: string
+              required: [mobileNumber]
+      responses:
+        "202":
+          description: Link dispatch queued
+
+  /sign/{token}/preview:
+    get:
+      tags: [Signature]
+      summary: Public endpoint to review issue before signing
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Issue preview for signer
+        "410":
+          description: Token expired or invalid
+
+  /sign/{token}/complete:
+    post:
+      tags: [Signature]
+      summary: Public endpoint to complete signature
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteSignatureRequest"
+      responses:
+        "200":
+          description: Signature accepted
+        "410":
+          description: Token invalid, expired, or already used
+
+  /reports/compliance:
+    get:
+      tags: [Reports]
+      summary: Compliance report by period and department
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: fromDate
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: toDate
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: departmentId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Compliance result
+
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard KPI summary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: KPI cards and highlights
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: "#/components/schemas/User"
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    Department:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        departmentName:
+          type: string
+        isActive:
+          type: boolean
+    Person:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeNo:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        mobileNumber:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        subDepartmentId:
+          type: string
+          format: uuid
+        sizeProfile:
+          type: array
+          items:
+            $ref: "#/components/schemas/SizeProfileItem"
+    PersonListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Person"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    SizeProfileItem:
+      type: object
+      required: [sizeType, sizeValue]
+      properties:
+        sizeType:
+          type: string
+        sizeValue:
+          type: string
+    CreateUserRequest:
+      type: object
+      required: [fullName, email, roleId, password]
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        roleId:
+          type: string
+          format: uuid
+        password:
+          type: string
+    CreatePersonRequest:
+      type: object
+      required:
+        [employeeNo, firstName, lastName, mobileNumber, departmentId, subDepartmentId]
+      properties:
+        employeeNo:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        mobileNumber:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        subDepartmentId:
+          type: string
+          format: uuid
+        jobTitleId:
+          type: string
+          format: uuid
+        sizes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SizeProfileItem"
+    UpdatePersonRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        mobileNumber:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        subDepartmentId:
+          type: string
+          format: uuid
+        employmentStatus:
+          type: string
+          enum: [active, inactive, terminated]
+    CreatePPEItemRequest:
+      type: object
+      required: [categoryId, itemCode, itemName]
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        replacementCycleDays:
+          type: integer
+    CreatePPEVariantRequest:
+      type: object
+      required: [ppeItemId, variantCode, sizeValue]
+      properties:
+        ppeItemId:
+          type: string
+          format: uuid
+        variantCode:
+          type: string
+        sizeValue:
+          type: string
+        color:
+          type: string
+    CreateStockMovementRequest:
+      type: object
+      required: [ppeVariantId, locationId, movementType, quantity]
+      properties:
+        ppeVariantId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        movementType:
+          type: string
+          enum: [receipt, issue, adjustment, return]
+        quantity:
+          type: number
+        unitCost:
+          type: number
+        reasonCode:
+          type: string
+    CreateIssueRequest:
+      type: object
+      required: [personId, locationId, signatureMode, lines]
+      properties:
+        personId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        signatureMode:
+          type: string
+          enum: [in_person, remote]
+        notes:
+          type: string
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [ppeVariantId, quantity]
+            properties:
+              ppeVariantId:
+                type: string
+                format: uuid
+              quantity:
+                type: number
+    CompleteSignatureRequest:
+      type: object
+      required: [signerName, signerMobile, signatureType, signaturePayload]
+      properties:
+        signerName:
+          type: string
+        signerMobile:
+          type: string
+        signatureType:
+          type: string
+          enum: [draw, type, consent]
+        signaturePayload:
+          type: string
+          description: Base64 string or object-storage URI
