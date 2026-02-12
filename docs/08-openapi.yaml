@@ -1,0 +1,630 @@
+openapi: 3.0.3
+info:
+  title: HFR Schafer Vervoer PPE Issue API
+  version: 1.0.0
+  description: >
+    API contract for PPE stock control, people management, issue transactions,
+    and WhatsApp-based digital signature acknowledgements.
+servers:
+  - url: /api/v1
+tags:
+  - name: Auth
+  - name: Departments
+  - name: People
+  - name: PPE
+  - name: Stock
+  - name: Issues
+  - name: Signatures
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /departments:
+    get:
+      tags: [Departments]
+      summary: List departments
+      responses:
+        "200":
+          description: Department list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Department"
+    post:
+      tags: [Departments]
+      summary: Create department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                code:
+                  type: string
+      responses:
+        "201":
+          description: Department created
+
+  /departments/{id}/sub-departments:
+    post:
+      tags: [Departments]
+      summary: Create sub-department
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                code:
+                  type: string
+      responses:
+        "201":
+          description: Sub-department created
+
+  /people:
+    get:
+      tags: [People]
+      summary: List people
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: departmentId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: subDepartmentId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Person list
+    post:
+      tags: [People]
+      summary: Create person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonRequest"
+      responses:
+        "201":
+          description: Person created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Person"
+
+  /people/{id}:
+    get:
+      tags: [People]
+      summary: Get person by id
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Person details
+    patch:
+      tags: [People]
+      summary: Update person
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePersonRequest"
+      responses:
+        "200":
+          description: Person updated
+    delete:
+      tags: [People]
+      summary: Delete person (soft-delete recommended)
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: Person deleted
+
+  /people/{id}/sizes:
+    patch:
+      tags: [People]
+      summary: Update PPE size profile
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SizeProfile"
+      responses:
+        "200":
+          description: Size profile updated
+
+  /ppe/items:
+    get:
+      tags: [PPE]
+      summary: List PPE items
+      responses:
+        "200":
+          description: PPE item list
+    post:
+      tags: [PPE]
+      summary: Create PPE item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePpeItemRequest"
+      responses:
+        "201":
+          description: PPE item created
+
+  /stock/balances:
+    get:
+      tags: [Stock]
+      summary: Get stock balances
+      responses:
+        "200":
+          description: Current stock balances
+
+  /stock/receive:
+    post:
+      tags: [Stock]
+      summary: Receive stock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockReceiveRequest"
+      responses:
+        "201":
+          description: Stock receipt posted
+
+  /stock/adjust:
+    post:
+      tags: [Stock]
+      summary: Adjust stock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjustRequest"
+      responses:
+        "201":
+          description: Stock adjustment posted
+
+  /issues:
+    get:
+      tags: [Issues]
+      summary: List issue transactions
+      responses:
+        "200":
+          description: Issue list
+    post:
+      tags: [Issues]
+      summary: Create PPE issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIssueRequest"
+      responses:
+        "201":
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Issue"
+
+  /issues/{id}/send-signature-link:
+    post:
+      tags: [Signatures]
+      summary: Send WhatsApp signature link
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expiryHours:
+                  type: integer
+                  minimum: 1
+                  maximum: 168
+                  default: 48
+      responses:
+        "200":
+          description: Signature link queued
+
+  /sign/public/{token}:
+    get:
+      tags: [Signatures]
+      summary: Get public signing payload by token
+      security: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sign payload loaded
+        "410":
+          description: Link expired
+    post:
+      tags: [Signatures]
+      summary: Submit signature
+      security: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSignatureRequest"
+      responses:
+        "200":
+          description: Signature submitted
+        "410":
+          description: Link expired
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            refreshToken:
+              type: string
+            user:
+              $ref: "#/components/schemas/User"
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        fullName:
+          type: string
+        roleCodes:
+          type: array
+          items:
+            type: string
+    Department:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        isActive:
+          type: boolean
+    SizeProfile:
+      type: object
+      properties:
+        clothingSize:
+          type: string
+        jacketSize:
+          type: string
+        trouserSize:
+          type: string
+        shoeSize:
+          type: string
+        gloveSize:
+          type: string
+        coverallSize:
+          type: string
+        helmetSize:
+          type: string
+        reflectiveVestSize:
+          type: string
+        rainSuitSize:
+          type: string
+    Person:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+        mobileNumber:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        subDepartmentId:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        status:
+          type: string
+        sizeProfile:
+          $ref: "#/components/schemas/SizeProfile"
+    CreatePersonRequest:
+      type: object
+      required:
+        - employeeNumber
+        - firstName
+        - lastName
+        - mobileNumber
+        - departmentId
+        - subDepartmentId
+      properties:
+        employeeNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        mobileNumber:
+          type: string
+        email:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        subDepartmentId:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        sizeProfile:
+          $ref: "#/components/schemas/SizeProfile"
+    UpdatePersonRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        mobileNumber:
+          type: string
+        email:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        subDepartmentId:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        status:
+          type: string
+    CreatePpeItemRequest:
+      type: object
+      required: [sku, name, categoryId]
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        description:
+          type: string
+        sizeRequired:
+          type: boolean
+        sizes:
+          type: array
+          items:
+            type: string
+        minStockThreshold:
+          type: number
+        reorderLevel:
+          type: number
+    StockReceiveRequest:
+      type: object
+      required: [locationId, ppeItemId, quantity]
+      properties:
+        locationId:
+          type: string
+          format: uuid
+        ppeItemId:
+          type: string
+          format: uuid
+        sizeLabel:
+          type: string
+        quantity:
+          type: number
+          minimum: 0.01
+        reasonCode:
+          type: string
+    StockAdjustRequest:
+      type: object
+      required: [locationId, ppeItemId, quantity, reasonCode]
+      properties:
+        locationId:
+          type: string
+          format: uuid
+        ppeItemId:
+          type: string
+          format: uuid
+        sizeLabel:
+          type: string
+        quantity:
+          type: number
+          minimum: 0.01
+        adjustmentType:
+          type: string
+          enum: [INCREASE, DECREASE]
+        reasonCode:
+          type: string
+        notes:
+          type: string
+    CreateIssueRequest:
+      type: object
+      required: [personId, issuedFromLocationId, issueReason, items]
+      properties:
+        personId:
+          type: string
+          format: uuid
+        issuedFromLocationId:
+          type: string
+          format: uuid
+        issueReason:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [ppeItemId, quantity]
+            properties:
+              ppeItemId:
+                type: string
+                format: uuid
+              sizeLabel:
+                type: string
+              quantity:
+                type: number
+                minimum: 0.01
+    Issue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueNumber:
+          type: string
+        personId:
+          type: string
+          format: uuid
+        issueDate:
+          type: string
+          format: date-time
+        issueReason:
+          type: string
+        status:
+          type: string
+    SubmitSignatureRequest:
+      type: object
+      required: [signatureType, signatureData, consentAccepted]
+      properties:
+        signatureType:
+          type: string
+          enum: [DRAWN, TYPED]
+        signatureData:
+          type: string
+        signedName:
+          type: string
+        consentAccepted:
+          type: boolean
+
