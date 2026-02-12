@@ -6,6 +6,7 @@ import { prisma } from "../lib/prisma.js";
 import { createAuditLog } from "../lib/audit.js";
 import { buildIssueNumber, generateRawToken, hashToken } from "../lib/signature.js";
 import { env } from "../config/env.js";
+import { sendWhatsAppMessage } from "../lib/whatsapp.js";
 
 export const issueRoutes: FastifyPluginAsync = async (app) => {
   app.get(
@@ -241,6 +242,16 @@ export const issueRoutes: FastifyPluginAsync = async (app) => {
 
       const signingLink = `${env.SIGNING_LINK_BASE_URL}/${rawToken}`;
       const recipient = payload.mobileNumber ?? issue.person.mobileNumber;
+      const messageBody =
+        `Hello ${issue.person.firstName},\n\n` +
+        `HFR Schafer Vervoer has issued PPE for you.\n` +
+        `Please review and sign your PPE receipt:\n${signingLink}\n\n` +
+        `This link expires on ${expiresAt.toLocaleString()}.`;
+
+      const dispatchResult = await sendWhatsAppMessage({
+        to: recipient,
+        body: messageBody,
+      });
 
       await prisma.notificationLog.create({
         data: {
@@ -249,12 +260,19 @@ export const issueRoutes: FastifyPluginAsync = async (app) => {
           templateCode: "PPE_SIGNATURE_LINK_V1",
           issueTransactionId: issue.id,
           signatureTokenId: token.id,
-          status: "queued",
+          providerMessageId: dispatchResult.providerMessageId,
+          status: dispatchResult.status,
           payloadJson: {
             personId: issue.personId,
             issueNo: issue.issueNo,
             signingLink,
           },
+          responseJson: {
+            sent: dispatchResult.sent,
+            errorMessage: dispatchResult.errorMessage,
+          },
+          sentAt: dispatchResult.status === "sent" ? new Date() : undefined,
+          failedAt: dispatchResult.status === "failed" ? new Date() : undefined,
         },
       });
 
@@ -267,6 +285,7 @@ export const issueRoutes: FastifyPluginAsync = async (app) => {
           issueId: issue.id,
           recipient,
           expiresAt: expiresAt.toISOString(),
+          notificationStatus: dispatchResult.status,
         },
         ipAddress: request.ip,
         userAgent: request.headers["user-agent"]?.toString(),
@@ -274,12 +293,19 @@ export const issueRoutes: FastifyPluginAsync = async (app) => {
 
       return reply.code(202).send({
         success: true,
-        message: "Signature link queued",
+        message:
+          dispatchResult.status === "sent"
+            ? "Signature link sent"
+            : dispatchResult.status === "queued"
+              ? "Signature link queued"
+              : "Signature link failed to send",
         data: {
           issueId: issue.id,
           recipient,
           expiresAt,
           signingLink,
+          notificationStatus: dispatchResult.status,
+          errorMessage: dispatchResult.errorMessage,
         },
       });
     },
