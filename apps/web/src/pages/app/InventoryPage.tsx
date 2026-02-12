@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Grid,
   MenuItem,
   Paper,
   Stack,
@@ -134,8 +133,14 @@ export function InventoryPage() {
           <Typography variant="h6" fontWeight={700} mb={2}>
             Add stock movement
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+            }}
+          >
+            <Box>
               <TextField select label="PPE variant" fullWidth {...form.register("ppeVariantId")}>
                 {(variantsQuery.data ?? []).map((variant) => (
                   <MenuItem key={variant.id} value={variant.id}>
@@ -143,8 +148,8 @@ export function InventoryPage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+            <Box>
               <TextField select label="Location" fullWidth {...form.register("locationId")}>
                 {(locationsQuery.data ?? []).map((location) => (
                   <MenuItem key={location.id} value={location.id}>
@@ -152,22 +157,32 @@ export function InventoryPage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              mt: 2,
+              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" },
+            }}
+          >
+            <Box>
               <TextField select label="Movement type" fullWidth {...form.register("movementType")}>
                 <MenuItem value="receipt">Receipt</MenuItem>
                 <MenuItem value="adjustment">Adjustment</MenuItem>
                 <MenuItem value="return">Return</MenuItem>
                 <MenuItem value="issue">Issue</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            </Box>
+            <Box>
               <TextField label="Quantity" type="number" fullWidth {...form.register("quantity", { valueAsNumber: true })} />
-            </Grid>
-            <Grid item xs={12} md={4}>
+            </Box>
+            <Box>
               <TextField label="Reason code" fullWidth {...form.register("reasonCode")} />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Box mt={2}>
             <Button

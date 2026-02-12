@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { hashToken } from "../lib/signature.js";
@@ -85,7 +86,7 @@ export const publicSignatureRoutes: FastifyPluginAsync = async (app) => {
       return reply.tooManyRequests("Signature attempts exceeded");
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.signatureRecord.create({
         data: {
           issueTransactionId: token.issueTransactionId,

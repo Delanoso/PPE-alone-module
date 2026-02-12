@@ -8,7 +8,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   IconButton,
   MenuItem,
   Paper,
@@ -235,8 +234,15 @@ export function PeoplePage() {
       <Dialog open={openCreate} onClose={() => setOpenCreate(false)} fullWidth maxWidth="md">
         <DialogTitle>Add person</DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2} sx={{ mt: 0.25 }}>
-            <Grid item xs={12} sm={6}>
+          <Box
+            sx={{
+              mt: 0.25,
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+            }}
+          >
+            <Box>
               <TextField
                 label="Employee No"
                 fullWidth
@@ -244,8 +250,8 @@ export function PeoplePage() {
                 error={!!form.formState.errors.employeeNo}
                 helperText={form.formState.errors.employeeNo?.message}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField
                 label="Mobile"
                 fullWidth
@@ -253,8 +259,8 @@ export function PeoplePage() {
                 error={!!form.formState.errors.mobileNumber}
                 helperText={form.formState.errors.mobileNumber?.message}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField
                 label="First name"
                 fullWidth
@@ -262,8 +268,8 @@ export function PeoplePage() {
                 error={!!form.formState.errors.firstName}
                 helperText={form.formState.errors.firstName?.message}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField
                 label="Last name"
                 fullWidth
@@ -271,9 +277,9 @@ export function PeoplePage() {
                 error={!!form.formState.errors.lastName}
                 helperText={form.formState.errors.lastName?.message}
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6}>
+            <Box>
               <TextField
                 label="Department"
                 select
@@ -288,8 +294,8 @@ export function PeoplePage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField
                 label="Sub-department"
                 select
@@ -304,9 +310,9 @@ export function PeoplePage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6}>
+            <Box>
               <TextField select label="Boot size" fullWidth {...form.register("bootsSize")}>
                 {bootSizes.map((size) => (
                   <MenuItem key={size} value={size}>
@@ -314,8 +320,8 @@ export function PeoplePage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField select label="Glove size" fullWidth {...form.register("gloveSize")}>
                 {gloveSizes.map((size) => (
                   <MenuItem key={size} value={size}>
@@ -323,8 +329,8 @@ export function PeoplePage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField select label="Overalls size" fullWidth {...form.register("overallSize")}>
                 {alphaSizes.map((size) => (
                   <MenuItem key={size} value={size}>
@@ -332,8 +338,8 @@ export function PeoplePage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box>
               <TextField select label="Safety vest size" fullWidth {...form.register("vestSize")}>
                 {alphaSizes.map((size) => (
                   <MenuItem key={size} value={size}>
@@ -341,8 +347,8 @@ export function PeoplePage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCreate(false)}>Cancel</Button>

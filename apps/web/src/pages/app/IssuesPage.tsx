@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Chip,
-  Grid,
   IconButton,
   MenuItem,
   Paper,
@@ -155,8 +154,14 @@ export function IssuesPage() {
           <Typography variant="h6" fontWeight={700} mb={2}>
             Create issue transaction
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+            }}
+          >
+            <Box>
               <TextField select label="Person" fullWidth {...form.register("personId")}>
                 {(peopleQuery.data ?? []).map((person) => (
                   <MenuItem key={person.id} value={person.id}>
@@ -164,8 +169,8 @@ export function IssuesPage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+            <Box>
               <TextField select label="Location" fullWidth {...form.register("locationId")}>
                 {(locationsQuery.data ?? []).map((location) => (
                   <MenuItem key={location.id} value={location.id}>
@@ -173,19 +178,27 @@ export function IssuesPage() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+            <Box>
               <TextField select label="Signature mode" fullWidth {...form.register("signatureMode")}>
                 <MenuItem value="in_person">In Person Signature</MenuItem>
                 <MenuItem value="remote">Remote Signature - WhatsApp Link</MenuItem>
               </TextField>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Stack spacing={1.25} mt={2}>
             {linesArray.fields.map((line, index) => (
-              <Grid container spacing={1.5} key={line.id} alignItems="center">
-                <Grid item xs={12} md={7}>
+              <Box
+                key={line.id}
+                sx={{
+                  display: "grid",
+                  gap: 1.5,
+                  gridTemplateColumns: { xs: "1fr", md: "2fr 1fr auto" },
+                  alignItems: "center",
+                }}
+              >
+                <Box>
                   <TextField
                     select
                     label={`PPE item ${index + 1}`}
@@ -198,16 +211,16 @@ export function IssuesPage() {
                       </MenuItem>
                     ))}
                   </TextField>
-                </Grid>
-                <Grid item xs={8} md={3}>
+                </Box>
+                <Box>
                   <TextField
                     label="Qty"
                     type="number"
                     fullWidth
                     {...form.register(`lines.${index}.quantity`, { valueAsNumber: true })}
                   />
-                </Grid>
-                <Grid item xs={4} md={2}>
+                </Box>
+                <Box>
                   <IconButton
                     color="error"
                     disabled={linesArray.fields.length === 1}
@@ -215,8 +228,8 @@ export function IssuesPage() {
                   >
                     <DeleteOutlineIcon />
                   </IconButton>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             ))}
           </Stack>
 

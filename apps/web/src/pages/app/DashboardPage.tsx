@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Grid, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Box, Paper, Stack, Typography } from "@mui/material";
 import { AppShell } from "@/components/layout/AppShell";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { apiClient } from "@/services/api";
@@ -44,20 +44,22 @@ export function DashboardPage() {
           </Alert>
         ) : null}
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} xl={3}>
-            <KpiCard label="Active workers" value={summary.activeWorkers} />
-          </Grid>
-          <Grid item xs={12} sm={6} xl={3}>
-            <KpiCard label="Open issues" value={summary.openIssues} />
-          </Grid>
-          <Grid item xs={12} sm={6} xl={3}>
-            <KpiCard label="Pending signatures" value={summary.pendingSignatures} />
-          </Grid>
-          <Grid item xs={12} sm={6} xl={3}>
-            <KpiCard label="Low stock items" value={summary.lowStockItems} />
-          </Grid>
-        </Grid>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, minmax(0, 1fr))",
+              xl: "repeat(4, minmax(0, 1fr))",
+            },
+          }}
+        >
+          <KpiCard label="Active workers" value={summary.activeWorkers} />
+          <KpiCard label="Open issues" value={summary.openIssues} />
+          <KpiCard label="Pending signatures" value={summary.pendingSignatures} />
+          <KpiCard label="Low stock items" value={summary.lowStockItems} />
+        </Box>
 
         <Paper elevation={0} sx={{ p: 2.5, border: "1px solid", borderColor: "divider" }}>
           <Typography variant="h6" fontWeight={700} mb={1}>

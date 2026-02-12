@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { createIssueSchema } from "@hfr/ppe-shared";
 import { prisma } from "../lib/prisma.js";
@@ -48,7 +49,7 @@ export const issueRoutes: FastifyPluginAsync = async (app) => {
         return reply.badRequest("Person not found");
       }
 
-      const issue = await prisma.$transaction(async (tx) => {
+      const issue = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         for (const line of payload.lines) {
           const balance = await tx.stockMovement.aggregate({
             where: {

@@ -1,4 +1,5 @@
 import { prisma } from "./prisma.js";
+import { Prisma } from "@prisma/client";
 
 type AuditInput = {
   actorUserId?: string;
@@ -11,6 +12,11 @@ type AuditInput = {
   userAgent?: string;
 };
 
+function normalizeJson(value: unknown): Prisma.InputJsonValue | undefined {
+  if (value === undefined) return undefined;
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
 export async function createAuditLog(input: AuditInput) {
   await prisma.auditLog.create({
     data: {
@@ -18,8 +24,8 @@ export async function createAuditLog(input: AuditInput) {
       action: input.action,
       entityName: input.entityName,
       entityId: input.entityId,
-      beforeJson: input.beforeJson,
-      afterJson: input.afterJson,
+      beforeJson: normalizeJson(input.beforeJson),
+      afterJson: normalizeJson(input.afterJson),
       ipAddress: input.ipAddress,
       userAgent: input.userAgent,
     },

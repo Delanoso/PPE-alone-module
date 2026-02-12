@@ -154,7 +154,7 @@ export const peopleRoutes: FastifyPluginAsync = async (app) => {
         })
         .parse(request.body);
 
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.personSizeProfile.deleteMany({
           where: { personId: params.personId },
         });
