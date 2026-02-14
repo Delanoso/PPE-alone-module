@@ -1,0 +1,19 @@
+{
+  "name": "ppe-issue-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HFR Schafer Vervoer PPE Issue Management System",
+  "workspaces": ["apps/api", "apps/web"],
+  "scripts": {
+    "dev": "npm run free-ports && concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "free-ports": "npx --yes kill-port 3001 5173",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "ngrok": "ngrok http 5173",
+    "build": "npm run build -w apps/web",
+    "start": "npm run start -w apps/api"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

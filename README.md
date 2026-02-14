@@ -73,12 +73,42 @@ All core documentation is in `docs/`:
 
 ---
 
-## Next step (implementation)
+## Running the application
 
-Use the provided specs as build-ready guidance to implement:
+The project includes a working implementation with mock data. No database setup required.
 
-- Backend service (`apps/api`)
-- Frontend application (`apps/web`)
-- Migration and seed scripts (`database`)
-- Deployment assets (`infra`)
+### Prerequisites
+
+- Node.js 18+
+
+### Quick start
+
+```bash
+cd PPE-alone-module
+npm install
+npm run dev
+```
+
+This starts both the API (port 3001) and web app (port 5173). Open **http://localhost:5173** in your browser.
+
+### Login credentials (demo)
+
+- **Admin:** `admin` / `admin123`
+- **Manager:** `manager` / `manager123`
+- **Stores:** `stores` / `stores123`
+
+### Test signature page
+
+To test the mobile-friendly signing flow, visit:
+
+**http://localhost:5173/sign/test-signature-token**
+
+---
+
+## Implementation status
+
+- **API** – Full REST API with in-memory store and seed data
+- **Web app** – React + Vite frontend with Dashboard, People, Departments, PPE Catalog, Stock, Issuing, Signatures, Reports
+- **Database** – PostgreSQL schema in `docs/06-DATABASE_SCHEMA.sql` (use migrations for production)
+- **WhatsApp** – Placeholder; integrate with provider for production
 

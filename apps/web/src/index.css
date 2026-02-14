@@ -1,0 +1,51 @@
+:root {
+  --bg: #0f1419;
+  --bg-card: #1a222c;
+  --bg-hover: #232d3a;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #22c55e;
+  --accent-dim: #16a34a;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --border: #30363d;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Utilities */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }

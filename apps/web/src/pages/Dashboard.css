@@ -1,0 +1,143 @@
+.dashboard {
+  max-width: 1200px;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.25rem;
+}
+
+.page-header p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.page-loading {
+  color: var(--text-muted);
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.stat-card.warn .stat-value {
+  color: var(--warn);
+}
+
+.stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.dashboard-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.card h2 {
+  font-size: 1rem;
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.dept-list,
+.stock-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dept-list li,
+.stock-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.dept-list li:last-child,
+.stock-list li:last-child {
+  border-bottom: none;
+}
+
+.count,
+.qty {
+  font-weight: 500;
+}
+
+.qty.low {
+  color: var(--warn);
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.badge.success {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--accent);
+}
+
+.badge.warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warn);
+}

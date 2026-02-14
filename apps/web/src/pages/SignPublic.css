@@ -1,0 +1,195 @@
+.sign-public-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--bg) 0%, #141b24 100%);
+}
+
+.sign-public-card {
+  width: 100%;
+  max-width: 540px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.sign-public-card h1 {
+  font-size: 1.35rem;
+  margin: 0 0 0.25rem;
+}
+
+.sign-public-card .subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.sign-summary {
+  background: var(--bg);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.sign-summary p {
+  margin: 0.35rem 0;
+}
+
+.sign-items {
+  margin-top: 0.5rem;
+}
+
+.sign-items ul {
+  margin: 0.25rem 0 0 1rem;
+  padding: 0;
+}
+
+.sign-items-list {
+  margin: 1.25rem 0;
+}
+
+.sign-items-list > strong {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.sign-item-row {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.signature-pad-wrap {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.signature-canvas {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  touch-action: none;
+  max-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .signature-canvas {
+    max-width: 100%;
+  }
+}
+
+.btn-clear-sig {
+  margin-top: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.btn-clear-sig:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.sign-item-info {
+  margin-bottom: 0.5rem;
+}
+
+.sign-item-name {
+  font-weight: 600;
+}
+
+.sign-item-size {
+  margin-left: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.policy-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.sign-public-card form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.sign-public-card form label span {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.sign-public-card form input[type="text"] {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+.sign-public-card .form-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+.sign-public-card .btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sign-public-loading,
+.sign-public-error,
+.sign-public-done {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.sign-public-error h1,
+.sign-public-done h1 {
+  color: var(--danger);
+  margin-bottom: 0.5rem;
+}
+
+.sign-public-done h1 {
+  color: var(--accent);
+}

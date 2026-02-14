@@ -1,0 +1,122 @@
+.issue-view-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.issue-view-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.issue-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.issue-view-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.btn-close:hover {
+  color: var(--text);
+}
+
+.issue-view-summary {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.issue-view-summary .muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.issue-view-signatures {
+  padding: 1rem 1.25rem;
+}
+
+.issue-view-signatures h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.signature-block {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.sig-item-name {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sig-pad {
+  min-height: 40px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.sig-image {
+  max-width: 100%;
+  max-height: 60px;
+  object-fit: contain;
+}
+
+.sig-text {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.sig-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
+.issue-view-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.issue-view-loading,
+.issue-view-error {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}

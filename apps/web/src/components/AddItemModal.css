@@ -1,0 +1,119 @@
+.add-item-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.add-item-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.add-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.add-item-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.add-item-sub {
+  padding: 0.75rem 1.25rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.add-item-modal form {
+  padding: 1rem 1.25rem;
+}
+
+.add-item-modal label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.add-item-modal label span {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+}
+
+.add-item-modal select {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+.add-item-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.add-item-success {
+  padding: 1rem 1.25rem;
+}
+
+.success-msg {
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.add-item-success .sign-url-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.add-item-success .sign-url-input {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.add-item-success .btn-whatsapp {
+  display: inline-flex;
+  padding: 0.6rem 1rem;
+  background: #25d366;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.add-item-success .hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.form-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}

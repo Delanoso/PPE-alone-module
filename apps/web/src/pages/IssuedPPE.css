@@ -1,0 +1,124 @@
+.issued-ppe-page .page-header {
+  margin-bottom: 1.5rem;
+}
+
+.issued-ppe-page .page-header p {
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.issued-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.issued-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.issued-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  transition: background 0.15s;
+}
+
+.issued-header:hover {
+  background: var(--bg);
+}
+
+.issued-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.issued-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.issued-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.issued-chevron {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.issued-details {
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.issued-item-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.issued-item-row:last-child {
+  border-bottom: none;
+}
+
+.issued-item-info {
+  min-width: 180px;
+}
+
+.issued-item-info strong {
+  display: block;
+}
+
+.issued-size {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.issued-signature-block {
+  flex: 1;
+  min-width: 200px;
+}
+
+.issued-sig-pad {
+  min-height: 44px;
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.issued-sig-image {
+  max-width: 160px;
+  max-height: 50px;
+  object-fit: contain;
+}
+
+.issued-sig-text {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.issued-sig-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}

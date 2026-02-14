@@ -1,0 +1,91 @@
+.sizes-public-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--bg) 0%, #141b24 100%);
+}
+
+.sizes-public-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.sizes-public-card h1 {
+  font-size: 1.35rem;
+  margin: 0 0 0.25rem;
+}
+
+.sizes-public-card .subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.sizes-public-card .intro {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.sizes-public-card form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.sizes-public-card form label span {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.sizes-public-card form select {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.sizes-public-card .btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sizes-public-loading,
+.sizes-public-error,
+.sizes-public-done {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.sizes-public-error h1 {
+  color: var(--danger);
+  margin-bottom: 0.5rem;
+}
+
+.sizes-public-done h1 {
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}

@@ -1,0 +1,110 @@
+.size-requests-page .form-row {
+  margin-bottom: 1rem;
+}
+
+.size-requests-page .form-row label span {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.size-requests-page .form-row input,
+.size-requests-page .form-row select,
+.size-requests-page .form-row textarea {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.size-requests-page .names-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.size-requests-page .form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.new-request-card {
+  margin-bottom: 1.5rem;
+}
+
+.request-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.request-card {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.request-card:hover {
+  background: var(--bg);
+}
+
+.request-card.selected {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb, 255, 193, 7), 0.08);
+}
+
+.request-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.request-card-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.request-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.request-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.request-stats .responded {
+  color: var(--success);
+}
+
+.request-stats .pending {
+  color: var(--warn);
+}
+
+.request-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.request-actions .btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.recipients-card {
+  margin-top: 1.5rem;
+}
+
+.recipients-card h2 {
+  margin-top: 0;
+}

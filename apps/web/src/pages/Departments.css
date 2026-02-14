@@ -1,0 +1,57 @@
+.departments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dept-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dept-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dept-header:hover {
+  background: var(--bg-hover);
+}
+
+.dept-name {
+  font-weight: 500;
+}
+
+.dept-toggle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.dept-subs {
+  padding: 0 1.25rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.sub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.sub-row:last-child {
+  border-bottom: none;
+}
