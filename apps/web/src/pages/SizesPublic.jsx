@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './SizesPublic.css';
 
-const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'];
+const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
 const OVERALL_PANTS_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
 const SAFETYBOOT_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
 

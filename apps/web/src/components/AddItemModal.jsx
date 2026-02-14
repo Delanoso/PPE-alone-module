@@ -101,7 +101,7 @@ export default function AddItemModal({ issue, issuableItems, onClose, onSuccess 
                       <option key={s} value={s}>{s}</option>
                     ))}
                   {(sizeKey === 'reflective_vest_size' || sizeKey === 'clothing_size') &&
-                    ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'].map((s) => (
+                    ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'].map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                 </select>

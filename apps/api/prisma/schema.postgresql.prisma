@@ -1,0 +1,226 @@
+// Use this schema for production (Vercel). Local dev uses schema.prisma (SQLite).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  code        String
+  name        String
+  description String?
+}
+
+model User {
+  id            String   @id @default(uuid())
+  username      String
+  full_name     String
+  email         String?
+  password_hash String
+  status        String   @default("ACTIVE")
+  roleIds       String?
+}
+
+model Department {
+  id         String   @id @default(uuid())
+  name       String
+  code       String?
+  is_active  Boolean  @default(true)
+  created_at String?
+
+  subDepartments SubDepartment[]
+  people         Person[]
+}
+
+model SubDepartment {
+  id            String  @id @default(uuid())
+  department_id String
+  name          String
+  code          String?
+  is_active     Boolean @default(true)
+
+  department Department @relation(fields: [department_id], references: [id])
+  people     Person[]
+}
+
+model Person {
+  id                String   @id @default(uuid())
+  employee_number   String
+  first_name        String
+  last_name         String
+  full_name         String
+  mobile_number     String
+  email             String?
+  department_id     String
+  sub_department_id String
+  job_title         String?
+  status            String   @default("ACTIVE")
+  employment_type   String   @default("EMPLOYEE")
+
+  department     Department     @relation(fields: [department_id], references: [id])
+  sub_department SubDepartment  @relation(fields: [sub_department_id], references: [id])
+  personSizes    PersonSizes?
+  ppeIssues      PpeIssue[]
+}
+
+model PersonSizes {
+  id                  String  @id @default(uuid())
+  person_id           String  @unique
+  coverall_size       String?
+  shoe_size           String?
+  reflective_vest_size String?
+  clothing_size       String?
+  jacket_size         String?
+  trouser_size        String?
+  glove_size          String?
+  helmet_size         String?
+  rain_suit_size      String?
+
+  person Person @relation(fields: [person_id], references: [id], onDelete: Cascade)
+}
+
+model PpeCategory {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  ppeItems PpeItem[]
+}
+
+model PpeItem {
+  id                   String  @id @default(uuid())
+  category_id           String
+  sku                   String
+  name                  String
+  category_name         String?
+  size_required         Boolean @default(false)
+  size_key              String?
+  min_stock_threshold   Int     @default(10)
+  reorder_level         Int     @default(20)
+  is_active             Boolean @default(true)
+
+  category       PpeCategory    @relation(fields: [category_id], references: [id])
+  ppeIssueItems PpeIssueItem[]
+  stockBalances  StockBalance[]
+}
+
+model StockLocation {
+  id        String  @id @default(uuid())
+  code      String
+  name      String
+  is_active Boolean @default(true)
+
+  stockBalances StockBalance[]
+}
+
+model StockBalance {
+  id             String  @id @default(uuid())
+  location_id    String
+  ppe_item_id   String
+  size_label     String?
+  on_hand_qty   Int     @default(0)
+  ppe_item_name String?
+
+  location StockLocation @relation(fields: [location_id], references: [id])
+  ppeItem  PpeItem       @relation(fields: [ppe_item_id], references: [id])
+}
+
+model StockMovement {
+  id             String  @id @default(uuid())
+  location_id    String
+  ppe_item_id   String
+  size_label     String?
+  quantity       Int
+  movement_type  String
+  reference_id   String?
+  created_at     String?
+}
+
+model PpeIssue {
+  id                      String   @id @default(uuid())
+  issue_number            String
+  person_id               String
+  issued_from_location_id String?
+  issue_date              String
+  issue_reason            String?
+  status                  String   @default("PENDING_SIGNATURE")
+  notes                   String?
+  created_by              String?
+  person_name             String?
+
+  person            Person             @relation(fields: [person_id], references: [id])
+  ppeIssueItems     PpeIssueItem[]
+  signatureRequests SignatureRequest[]
+}
+
+model PpeIssueItem {
+  id           String  @id @default(uuid())
+  issue_id     String
+  ppe_item_id  String
+  size_label   String?
+  quantity     Int     @default(1)
+  unit         String  @default("EA")
+
+  issue   PpeIssue @relation(fields: [issue_id], references: [id], onDelete: Cascade)
+  ppeItem PpeItem  @relation(fields: [ppe_item_id], references: [id])
+}
+
+model SignatureRequest {
+  id          String   @id @default(uuid())
+  issue_id    String
+  person_id   String
+  token_hash  String
+  expires_at  String
+  status      String   @default("PENDING")
+  signed_at   String?
+  signed_name String?
+  created_by  String?
+
+  issue PpeIssue @relation(fields: [issue_id], references: [id], onDelete: Cascade)
+}
+
+model IssueItemSignature {
+  id             String  @id @default(uuid())
+  issue_item_id  String
+  signed_name    String
+  signed_at      String
+  signature_data String?
+}
+
+model SizeRequest {
+  id               String   @id @default(uuid())
+  name             String
+  created_at       String?
+  created_by       String?
+  person_names     String?
+  job_title_filter String?
+  department_id    String?
+
+  recipients SizeRequestRecipient[]
+}
+
+model SizeRequestRecipient {
+  id               String  @id @default(uuid())
+  size_request_id  String
+  person_id        String
+  token            String
+  sent_at          String?
+  responded_at     String?
+  reminder_count   Int     @default(0)
+
+  sizeRequest SizeRequest @relation(fields: [size_request_id], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String  @id @default(uuid())
+  action     String
+  entity     String?
+  entity_id  String?
+  user_id    String?
+  details    String?
+  created_at String?
+}

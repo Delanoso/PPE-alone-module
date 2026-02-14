@@ -213,7 +213,7 @@ export default function Issuing() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     {(line.size_key === 'reflective_vest_size' || line.size_key === 'clothing_size') &&
-                      ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'].map((s) => (
+                      ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'].map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                   </select>

@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 
 const COVERALL_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
 const SHOE_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
-const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'];
+const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
 const PPE_CATEGORIES = ['Head Protection', 'Eye Protection', 'Face Protection', 'Hearing Protection', 'Respiratory Protection', 'Hand Protection', 'Body Protection', 'High Visibility Wear', 'Foot Protection', 'Fall Protection', 'Weather Protection', 'Hygiene and Disposable'];
 const JOB_TITLES = ['Driver - Refrigerated', 'Driver - Tautliner', 'Workshop Technician', 'Stores Clerk', 'Safety Officer', 'Department Supervisor', 'Admin Clerk', 'General Worker'];
 const DEPARTMENTS_DATA = [
