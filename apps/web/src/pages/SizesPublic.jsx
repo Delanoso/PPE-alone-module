@@ -87,7 +87,7 @@ export default function SizesPublic() {
     <div className="sizes-public-page">
       <div className="sizes-public-card">
         <h1>PPE Size Submission</h1>
-        <p className="subtitle">HFR Schafer Vervoer</p>
+        <p className="subtitle">PPE Issue Management</p>
         <p className="intro">Please provide your sizes for the following PPE items:</p>
 
         <form onSubmit={handleSubmit}>

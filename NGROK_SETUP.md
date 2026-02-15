@@ -2,7 +2,17 @@
 
 When you send size or sign links to drivers (e.g. via WhatsApp), those links must use a **public URL**. `localhost` only works on your own computer.
 
-## Steps
+## Quick start (recommended): Watchdog mode
+
+For development with ngrok, use the watchdog – it starts both dev server and ngrok, checks every **30 seconds**, and restarts either if they stop responding:
+
+```bash
+npm run dev:watch
+```
+
+The Dashboard, when viewed via your ngrok URL, **auto-reloads every 5 minutes** so wall displays stay up to date.
+
+## Manual steps
 
 1. **Start the dev server**
    ```bash

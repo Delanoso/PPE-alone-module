@@ -3,9 +3,11 @@ import { v4 as uuid } from 'uuid';
 import multer from 'multer';
 import * as XLSX from 'xlsx';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
+router.use(requireCompany);
 
 function enrichPerson(p) {
   const dept = p.department;
@@ -49,7 +51,9 @@ router.post('/import', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'No file uploaded. Use form field "file".' } });
   }
-  const dept = await prisma.department.findFirst();
+  const dept = await prisma.department.findFirst({
+    where: { company_id: req.companyId, name: 'Drivers' },
+  }) || await prisma.department.findFirst({ where: { company_id: req.companyId } });
   const subDept = await prisma.subDepartment.findFirst({ where: { department_id: dept?.id } });
   if (!dept || !subDept) {
     return res.status(500).json({ success: false, error: { code: 'NO_DEPARTMENT', message: 'No department configured. Run seed first.' } });
@@ -73,7 +77,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
     if (!mapped.employee_number || mapped.employee_number.startsWith('IMPORT-')) {
       mapped.employee_number = `IMPORT-${i + 1}-${Date.now()}`;
     }
-    const existing = await prisma.person.findFirst({ where: { employee_number: mapped.employee_number } });
+    const existing = await prisma.person.findFirst({ where: { company_id: req.companyId, employee_number: mapped.employee_number } });
     if (existing) {
       skipped.push({ employee_number: mapped.employee_number, reason: 'Already exists' });
       continue;
@@ -90,6 +94,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
         email: null,
         department_id: dept.id,
         sub_department_id: subDept.id,
+        company_id: req.companyId,
         job_title: 'Driver',
         status: 'ACTIVE',
         employment_type: 'EMPLOYEE',
@@ -119,6 +124,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
 
 router.get('/export/sizes', async (req, res) => {
   const people = await prisma.person.findMany({
+    where: { company_id: req.companyId },
     include: { department: true, sub_department: true, personSizes: true },
   });
   const enriched = people.map(enrichPerson);
@@ -146,7 +152,7 @@ router.get('/export/sizes', async (req, res) => {
 
 router.get('/', async (req, res) => {
   const { search, department_id, status } = req.query;
-  const where = {};
+  const where = { company_id: req.companyId };
   if (department_id) where.department_id = department_id;
   if (status) {
     where.status = status;
@@ -166,8 +172,8 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const person = await prisma.person.findUnique({
-    where: { id: req.params.id },
+  const person = await prisma.person.findFirst({
+    where: { id: req.params.id, company_id: req.companyId },
     include: { department: true, sub_department: true, personSizes: true },
   });
   if (!person) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
@@ -190,6 +196,7 @@ router.post('/', async (req, res) => {
       email: email || null,
       department_id,
       sub_department_id,
+      company_id: req.companyId,
       job_title: job_title || null,
       status: 'ACTIVE',
       employment_type: 'EMPLOYEE',
@@ -207,7 +214,7 @@ const PERSON_FIELDS = ['employee_number', 'first_name', 'last_name', 'full_name'
 const SIZE_KEYS = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size'];
 
 router.patch('/:id', async (req, res) => {
-  const person = await prisma.person.findUnique({ where: { id: req.params.id } });
+  const person = await prisma.person.findFirst({ where: { id: req.params.id, company_id: req.companyId } });
   if (!person) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const { first_name, last_name, ...rest } = req.body;
 
@@ -246,7 +253,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
-  const person = await prisma.person.findUnique({ where: { id: req.params.id } });
+  const person = await prisma.person.findFirst({ where: { id: req.params.id, company_id: req.companyId } });
   if (!person) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
 
   // Remove from reminders (SizeRequestRecipient)
@@ -263,6 +270,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 router.patch('/:id/sizes', async (req, res) => {
+  const person = await prisma.person.findFirst({ where: { id: req.params.id, company_id: req.companyId } });
+  if (!person) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const sizeProfile = await prisma.personSizes.upsert({
     where: { person_id: req.params.id },
     create: { person_id: req.params.id, ...req.body },

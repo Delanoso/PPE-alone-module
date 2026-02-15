@@ -1,17 +1,19 @@
 import { Router } from 'express';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
+router.use(requireCompany);
 
 router.get('/issues', async (req, res) => {
   const { start_date, end_date, department_id } = req.query;
-  const where = {};
+  const where = { person: { company_id: req.companyId } };
   if (start_date || end_date) {
     where.issue_date = {};
     if (start_date) where.issue_date.gte = start_date;
     if (end_date) where.issue_date.lte = end_date;
   }
-  if (department_id) where.person = { department_id: String(department_id) };
+  if (department_id) where.person.department_id = String(department_id);
   const issues = await prisma.ppeIssue.findMany({
     where,
     include: { person: true },
@@ -26,6 +28,7 @@ router.get('/issues', async (req, res) => {
 
 router.get('/stock', async (req, res) => {
   const balances = await prisma.stockBalance.findMany({
+    where: { location: { company_id: req.companyId } },
     include: { ppeItem: true },
   });
   const data = balances.map((b) => ({
@@ -38,6 +41,7 @@ router.get('/stock', async (req, res) => {
 
 router.get('/signatures', async (req, res) => {
   const requests = await prisma.signatureRequest.findMany({
+    where: { issue: { person: { company_id: req.companyId } } },
     include: { issue: { include: { person: true } } },
   });
   const data = requests.map((r) => ({
@@ -50,6 +54,7 @@ router.get('/signatures', async (req, res) => {
 
 router.get('/people-sizes', async (req, res) => {
   const people = await prisma.person.findMany({
+    where: { company_id: req.companyId },
     include: { personSizes: true, department: true },
   });
   const data = people.map((p) => ({

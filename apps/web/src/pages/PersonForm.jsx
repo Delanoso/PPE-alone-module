@@ -19,6 +19,7 @@ export default function PersonForm() {
     mobile_number: '',
     department_id: '',
     sub_department_id: '',
+    job_title: 'Driver',
     coverall_size: '',
     shoe_size: '',
     reflective_vest_size: '',
@@ -33,12 +34,14 @@ export default function PersonForm() {
       const depts = r.data || [];
       setDepartments(depts);
       if (!isEdit) {
-        const refrigerated = depts.find((d) => d.name?.toLowerCase().includes('refrigerated'));
-        if (refrigerated) {
-          const sub = refrigerated.sub_departments?.[0];
+        const drivers = depts.find((d) => d.name?.toLowerCase().includes('driver'));
+        const fallback = depts[0];
+        const dept = drivers || fallback;
+        if (dept) {
+          const sub = dept.sub_departments?.[0];
           setForm((f) => ({
             ...f,
-            department_id: refrigerated.id,
+            department_id: dept.id,
             sub_department_id: sub?.id || '',
           }));
         }
@@ -60,6 +63,7 @@ export default function PersonForm() {
             mobile_number: p.mobile_number || '',
             department_id: p.department_id || '',
             sub_department_id: p.sub_department_id || '',
+            job_title: p.job_title || 'Driver',
             coverall_size: sizes.coverall_size || '',
             shoe_size: sizes.shoe_size || '',
             reflective_vest_size: sizes.reflective_vest_size || '',
@@ -73,7 +77,11 @@ export default function PersonForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm((f) => {
+      const next = { ...f, [name]: value };
+      if (name === 'department_id') next.sub_department_id = '';
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -88,7 +96,7 @@ export default function PersonForm() {
         mobile_number: form.mobile_number,
         department_id: form.department_id,
         sub_department_id: form.sub_department_id,
-        job_title: 'Driver',
+        job_title: form.job_title?.trim() || null,
         coverall_size: form.coverall_size || undefined,
         shoe_size: form.shoe_size || undefined,
         reflective_vest_size: form.reflective_vest_size || undefined,
@@ -112,14 +120,14 @@ export default function PersonForm() {
   return (
     <div className="person-form-page">
       <header className="page-header">
-        <h1>{isEdit ? 'Edit driver' : 'Add driver'}</h1>
+        <h1>{isEdit ? 'Edit person' : 'Add person'}</h1>
       </header>
 
       <form onSubmit={handleSubmit} className="form-card">
         {error && <div className="form-error">{error}</div>}
 
         <section className="form-section">
-          <h2>Driver details</h2>
+          <h2>Person details</h2>
           <div className="form-row">
             <label>
               <span>Employee number (D NO) *</span>
@@ -136,6 +144,30 @@ export default function PersonForm() {
             <label>
               <span>Contact number *</span>
               <input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} required placeholder="e.g. 072 333 1204" />
+            </label>
+            <label>
+              <span>Department *</span>
+              <select name="department_id" value={form.department_id} onChange={handleChange} required>
+                <option value="">Select department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Job title</span>
+              <input name="job_title" value={form.job_title} onChange={handleChange} placeholder="e.g. Driver" />
+            </label>
+            <label>
+              <span>Sub-department *</span>
+              <select name="sub_department_id" value={form.sub_department_id} onChange={handleChange} required>
+                <option value="">Select sub-department</option>
+                {departments
+                  .find((d) => d.id === form.department_id)
+                  ?.sub_departments?.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  )) || []}
+              </select>
             </label>
           </div>
         </section>

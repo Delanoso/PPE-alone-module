@@ -104,7 +104,7 @@ export default function SignPublic() {
     <div className="sign-public-page">
       <div className="sign-public-card">
         <h1>PPE Issue Acknowledgment</h1>
-        <p className="subtitle">HFR Schafer Vervoer</p>
+        <p className="subtitle">PPE Issue Management</p>
 
         <div className="sign-summary">
           <p><strong>Issue:</strong> {data?.issue_number}</p>

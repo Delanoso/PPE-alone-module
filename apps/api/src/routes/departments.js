@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
+router.use(requireCompany);
 
 router.get('/', async (req, res) => {
   const depts = await prisma.department.findMany({
+    where: { company_id: req.companyId },
     include: { subDepartments: true },
   });
   const data = depts.map((d) => ({
@@ -19,7 +22,7 @@ router.post('/', async (req, res) => {
   const { name, code } = req.body;
   if (!name) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Name required' } });
   const dept = await prisma.department.create({
-    data: { id: uuid(), name, code: code || null, is_active: true },
+    data: { id: uuid(), name, code: code || null, is_active: true, company_id: req.companyId },
   });
   res.status(201).json({ success: true, data: { id: dept.id } });
 });
@@ -27,7 +30,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const dept = await prisma.department.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id, company_id: req.companyId },
       data: req.body,
     });
     res.json({ success: true, data: dept });
@@ -38,7 +41,17 @@ router.patch('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
+  const dept = await prisma.department.findFirst({ where: { id: req.params.id, company_id: req.companyId } });
+  if (!dept) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
+  const count = await prisma.person.count({ where: { department_id: req.params.id } });
+  if (count > 0) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'HAS_PEOPLE', message: `Cannot delete: ${count} person(s) assigned to this department. Reassign them first.` },
+    });
+  }
   try {
+    await prisma.subDepartment.deleteMany({ where: { department_id: req.params.id } });
     await prisma.department.delete({ where: { id: req.params.id } });
   } catch (e) {
     if (e.code === 'P2025') return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
@@ -48,6 +61,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 router.get('/:id/sub-departments', async (req, res) => {
+  const dept = await prisma.department.findFirst({ where: { id: req.params.id, company_id: req.companyId } });
+  if (!dept) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const subs = await prisma.subDepartment.findMany({
     where: { department_id: req.params.id },
   });
@@ -55,6 +70,8 @@ router.get('/:id/sub-departments', async (req, res) => {
 });
 
 router.post('/:id/sub-departments', async (req, res) => {
+  const dept = await prisma.department.findFirst({ where: { id: req.params.id, company_id: req.companyId } });
+  if (!dept) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const { name, code } = req.body;
   if (!name) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Name required' } });
   const sub = await prisma.subDepartment.create({
@@ -67,6 +84,42 @@ router.post('/:id/sub-departments', async (req, res) => {
     },
   });
   res.status(201).json({ success: true, data: { id: sub.id } });
+});
+
+router.patch('/:deptId/sub-departments/:subId', async (req, res) => {
+  const dept = await prisma.department.findFirst({ where: { id: req.params.deptId, company_id: req.companyId } });
+  if (!dept) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
+  try {
+    const sub = await prisma.subDepartment.update({
+      where: { id: req.params.subId, department_id: req.params.deptId },
+      data: req.body,
+    });
+    res.json({ success: true, data: sub });
+  } catch (e) {
+    if (e.code === 'P2025') return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
+    throw e;
+  }
+});
+
+router.delete('/:deptId/sub-departments/:subId', async (req, res) => {
+  const dept = await prisma.department.findFirst({ where: { id: req.params.deptId, company_id: req.companyId } });
+  if (!dept) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
+  const count = await prisma.person.count({ where: { sub_department_id: req.params.subId } });
+  if (count > 0) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'HAS_PEOPLE', message: `Cannot delete: ${count} person(s) assigned to this sub-department. Reassign them first.` },
+    });
+  }
+  try {
+    await prisma.subDepartment.delete({
+      where: { id: req.params.subId, department_id: req.params.deptId },
+    });
+  } catch (e) {
+    if (e.code === 'P2025') return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
+    throw e;
+  }
+  res.json({ success: true });
 });
 
 export { router as departmentsRouter };

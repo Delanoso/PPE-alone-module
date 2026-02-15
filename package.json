@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "HFR Schafer Vervoer PPE Issue Management System",
+  "description": "Multi-tenant PPE Issue Management System",
   "workspaces": ["apps/api", "apps/web"],
   "scripts": {
     "dev": "npm run free-ports && concurrently \"npm run dev:api\" \"npm run dev:web\"",

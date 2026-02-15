@@ -2,6 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './services/auth';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import Admin from './pages/Admin';
+import AdminCompanies from './pages/AdminCompanies';
+import AdminUsers from './pages/AdminUsers';
 import Dashboard from './pages/Dashboard';
 import People from './pages/People';
 import PersonForm from './pages/PersonForm';
@@ -21,6 +25,15 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (user.is_super_admin) return <Navigate to="/admin" replace />;
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.is_super_admin) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -28,6 +41,18 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
+        }
+      >
+        <Route index element={<AdminCompanies />} />
+        <Route path="users" element={<AdminUsers />} />
+      </Route>
       <Route path="/sign/:token" element={<SignPublic />} />
       <Route path="/sizes/:token" element={<SizesPublic />} />
       <Route

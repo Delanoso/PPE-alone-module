@@ -1,21 +1,34 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api, getApiBase } from '../services/api';
 import './People.css';
 
 export default function People() {
+  const [searchParams] = useSearchParams();
+  const deptFromUrl = searchParams.get('department_id') || '';
   const [people, setPeople] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState(deptFromUrl);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    api('/people').then((r) => setPeople(r.data || [])).finally(() => setLoading(false));
+    api('/departments').then((r) => setDepartments(r.data || []));
   }, []);
 
+  useEffect(() => {
+    setDepartmentFilter(deptFromUrl);
+  }, [deptFromUrl]);
+
+  useEffect(() => {
+    const params = departmentFilter ? `?department_id=${departmentFilter}` : '';
+    api(`/people${params}`).then((r) => setPeople(r.data || [])).finally(() => setLoading(false));
+  }, [departmentFilter]);
+
   const handleDelete = async (p) => {
-    if (!confirm(`Delete driver ${p.full_name}? They will be removed from the drivers list and reminders. Issued PPE records (if signed) are kept.`)) return;
+    if (!confirm(`Delete ${p.full_name}? They will be removed from the list and reminders. Issued PPE records (if signed) are kept.`)) return;
     try {
       await api(`/people/${p.id}`, { method: 'DELETE' });
       setPeople((prev) => prev.filter((x) => x.id !== p.id));
@@ -49,7 +62,7 @@ export default function People() {
       .then((data) => {
         if (!data.success) throw new Error(data.error?.message || 'Import failed');
         const { created, skipped } = data.data || {};
-        alert(`Import complete: ${created} drivers added, ${skipped} skipped (already exist)`);
+        alert(`Import complete: ${created} people added, ${skipped} skipped (already exist)`);
         api('/people').then((r) => setPeople(r.data || []));
       })
       .catch((e) => alert(e.message))
@@ -87,8 +100,8 @@ export default function People() {
     <div className="people-page">
       <header className="page-header flex">
         <div>
-          <h1>Drivers</h1>
-          <p>Refrigerated drivers – PPE sizes</p>
+          <h1>People</h1>
+          <p>All personnel by department – PPE sizes</p>
         </div>
         <div className="header-actions">
           <input
@@ -104,18 +117,28 @@ export default function People() {
             disabled={importing}
             onClick={() => fileInputRef.current?.click()}
           >
-            {importing ? 'Importing...' : 'Import drivers (Excel)'}
+            {importing ? 'Importing...' : 'Import people (Excel)'}
           </button>
           <button type="button" className="btn-secondary" onClick={handleExportSizes}>
             Export sizes (Excel)
           </button>
           <Link to="/people/new" className="btn-primary">
-            Add driver
+            Add person
           </Link>
         </div>
       </header>
 
       <div className="filters">
+        <select
+          value={departmentFilter}
+          onChange={(e) => setDepartmentFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="">All departments</option>
+          {departments.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
         <input
           type="search"
           placeholder="Search by name or employee number..."
@@ -131,6 +154,7 @@ export default function People() {
             <tr>
               <th>D NO</th>
               <th>Name</th>
+              <th>Department</th>
               <th>Contact number</th>
               <th>Overall pants</th>
               <th>Safety boot</th>
@@ -144,6 +168,7 @@ export default function People() {
               <tr key={p.id}>
                 <td>{p.employee_number}</td>
                 <td>{p.full_name}</td>
+                <td>{p.department_name || '-'}</td>
                 <td>{p.mobile_number}</td>
                 <td>{p.size_profile?.coverall_size || '-'}</td>
                 <td>{p.size_profile?.shoe_size || '-'}</td>

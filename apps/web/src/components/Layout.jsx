@@ -4,7 +4,8 @@ import './Layout.css';
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
-  { to: '/people', label: 'Drivers' },
+  { to: '/people', label: 'People' },
+  { to: '/departments', label: 'Departments' },
   { to: '/issuing', label: 'Issue PPE' },
   { to: '/issued', label: 'All Issued PPE' },
   { to: '/reminders', label: 'Reminders' },
@@ -18,7 +19,7 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <h1 className="logo">PPE</h1>
-          <span className="logo-sub">HFR Schafer Vervoer</span>
+          <span className="logo-sub">PPE Management</span>
         </div>
         <nav className="sidebar-nav">
           {navItems.map((item) => (

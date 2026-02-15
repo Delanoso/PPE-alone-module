@@ -50,8 +50,67 @@
   align-items: center;
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .sub-row:last-child {
   border-bottom: none;
+}
+
+.dept-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dept-actions,
+.sub-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dept-add-form,
+.sub-add-form,
+.sub-edit-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dept-add-form input,
+.sub-add-form input,
+.sub-edit-form input {
+  padding: 0.5rem;
+  min-width: 200px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.btn-add-sub {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-add-sub:hover {
+  text-decoration: underline;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.page-header.flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
 }

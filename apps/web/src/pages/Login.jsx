@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../services/auth';
 import './Login.css';
 
@@ -9,13 +9,20 @@ export default function Login() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const message = location.state?.message;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       await login(username, password);
-      navigate('/', { replace: true });
+      const user = JSON.parse(localStorage.getItem('ppe_user') || '{}');
+      if (user.is_super_admin) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       setError(err.message || 'Login failed');
     }
@@ -26,17 +33,18 @@ export default function Login() {
       <div className="login-card">
         <div className="login-header">
           <h1>PPE Issue Management</h1>
-          <p>HFR Schafer Vervoer</p>
+          <p>Log in to your account</p>
         </div>
+        {message && <div className="login-message">{message}</div>}
         <form onSubmit={handleSubmit} className="login-form">
           {error && <div className="login-error">{error}</div>}
           <label>
-            <span>Username or email</span>
+            <span>Email or username</span>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin"
+              placeholder="admin@company.com or admin"
               required
               autoComplete="username"
             />
@@ -57,7 +65,7 @@ export default function Login() {
           </button>
         </form>
         <p className="login-hint">
-          Demo: <kbd>admin</kbd> / <kbd>admin123</kbd> or <kbd>manager</kbd> / <kbd>manager123</kbd>
+          New company? <Link to="/register">Register</Link>
         </p>
       </div>
     </div>

@@ -1,19 +1,31 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
 const sizesPublicRouter = Router();
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:5173';
+
+router.use(requireCompany);
 
 function token() {
   return `sz-${uuid().replace(/-/g, '').slice(0, 20)}`;
 }
 
 router.get('/', async (req, res) => {
-  const list = await prisma.sizeRequest.findMany({
-    include: { recipients: true },
+  const ourPersonIds = (await prisma.person.findMany({ where: { company_id: req.companyId }, select: { id: true } })).map((p) => p.id);
+  const recs = await prisma.sizeRequestRecipient.findMany({
+    where: { person_id: { in: ourPersonIds } },
+    select: { size_request_id: true },
   });
+  const srIds = [...new Set(recs.map((r) => r.size_request_id))];
+  const list = srIds.length
+    ? await prisma.sizeRequest.findMany({
+        where: { id: { in: srIds } },
+        include: { recipients: { where: { person_id: { in: ourPersonIds } } } },
+      })
+    : [];
   const data = list.map((sr) => {
     const recipients = sr.recipients;
     const total = recipients.length;
@@ -51,7 +63,7 @@ function matchPeopleByNames(people, names) {
 router.post('/', async (req, res) => {
   const { name, person_names, job_title_filter, department_id, person_ids } = req.body;
   let people = await prisma.person.findMany({
-    where: { status: 'ACTIVE', mobile_number: { not: null } },
+    where: { company_id: req.companyId, status: 'ACTIVE', mobile_number: { not: null } },
   });
 
   const namesList = Array.isArray(person_names) ? person_names : parseNamesInput(person_names || '');
@@ -99,8 +111,12 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const sr = await prisma.sizeRequest.findUnique({
-    where: { id: req.params.id },
+  const ourPersonIds = (await prisma.person.findMany({ where: { company_id: req.companyId }, select: { id: true } })).map((p) => p.id);
+  const sr = await prisma.sizeRequest.findFirst({
+    where: {
+      id: req.params.id,
+      recipients: { some: { person_id: { in: ourPersonIds } } },
+    },
     include: { recipients: true },
   });
   if (!sr) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
@@ -117,7 +133,10 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/:id/send', async (req, res) => {
-  const sr = await prisma.sizeRequest.findUnique({ where: { id: req.params.id } });
+  const ourPersonIds = (await prisma.person.findMany({ where: { company_id: req.companyId }, select: { id: true } })).map((p) => p.id);
+  const sr = await prisma.sizeRequest.findFirst({
+    where: { id: req.params.id, recipients: { some: { person_id: { in: ourPersonIds } } } },
+  });
   if (!sr) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const recipients = await prisma.sizeRequestRecipient.findMany({
     where: { size_request_id: sr.id, sent_at: null },
@@ -139,7 +158,10 @@ router.post('/:id/send', async (req, res) => {
 });
 
 router.post('/:id/send-reminder', async (req, res) => {
-  const sr = await prisma.sizeRequest.findUnique({ where: { id: req.params.id } });
+  const ourPersonIds = (await prisma.person.findMany({ where: { company_id: req.companyId }, select: { id: true } })).map((p) => p.id);
+  const sr = await prisma.sizeRequest.findFirst({
+    where: { id: req.params.id, recipients: { some: { person_id: { in: ourPersonIds } } } },
+  });
   if (!sr) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const recipients = await prisma.sizeRequestRecipient.findMany({
     where: { size_request_id: sr.id, sent_at: { not: null }, responded_at: null },

@@ -1,0 +1,115 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: 220px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-header h1 {
+  font-size: 1rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.admin-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.admin-nav {
+  flex: 1;
+  padding: 0.5rem 0;
+}
+
+.admin-nav-link {
+  display: block;
+  padding: 0.5rem 1.25rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+  background: var(--bg-hover);
+}
+
+.admin-nav-link.active {
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  padding-left: calc(1.25rem - 3px);
+}
+
+.admin-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.admin-user {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.admin-page-header h1 {
+  margin: 0;
+}
+
+.admin-add-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-add-form input,
+.admin-add-form select {
+  padding: 0.5rem;
+  min-width: 150px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.admin-add-user input,
+.admin-add-user select {
+  min-width: 120px;
+}
+
+.admin-filters {
+  margin-bottom: 1rem;
+}
+
+.admin-table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.badge.error {
+  background: #dc3545;
+  color: #fff;
+}

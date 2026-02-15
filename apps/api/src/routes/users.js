@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import { prisma } from '../db.js';
+import { hashPassword } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
+router.use(requireCompany);
 
 router.get('/', async (req, res) => {
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany({
+    where: { company_id: req.companyId, is_super_admin: false },
+  });
   const roleIds = new Set();
   users.forEach((u) => {
     if (!u.roleIds) return;
@@ -39,7 +44,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  const user = await prisma.user.findFirst({ where: { id: req.params.id, company_id: req.companyId, is_super_admin: false } });
   if (!user)
     return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
   const parseRoleIds = (s) => {
@@ -67,21 +72,23 @@ router.post('/', async (req, res) => {
     });
   }
   const roleIdsStr = Array.isArray(roleIds) ? JSON.stringify(roleIds) : roleIds ? (typeof roleIds === 'string' ? roleIds : String(roleIds)) : JSON.stringify(['r5']);
+  const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
     data: {
       username,
       full_name,
       email: email || null,
-      password_hash: password,
+      password_hash: passwordHash,
       status: 'ACTIVE',
       roleIds: roleIdsStr,
+      company_id: req.companyId,
     },
   });
   res.status(201).json({ success: true, data: { id: user.id } });
 });
 
 router.patch('/:id', async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  const user = await prisma.user.findFirst({ where: { id: req.params.id, company_id: req.companyId, is_super_admin: false } });
   if (!user)
     return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
   const { username, full_name, email, status, password, roleIds } = req.body;
@@ -90,7 +97,7 @@ router.patch('/:id', async (req, res) => {
   if (full_name !== undefined) data.full_name = full_name;
   if (email !== undefined) data.email = email;
   if (status !== undefined) data.status = status;
-  if (password) data.password_hash = password;
+  if (password) data.password_hash = await hashPassword(password);
   if (roleIds !== undefined) data.roleIds = Array.isArray(roleIds) ? JSON.stringify(roleIds) : String(roleIds);
   if (Object.keys(data).length === 0) return res.json({ success: true, data: user });
   const updated = await prisma.user.update({ where: { id: req.params.id }, data });
@@ -98,7 +105,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  const user = await prisma.user.findFirst({ where: { id: req.params.id, company_id: req.companyId, is_super_admin: false } });
   if (!user)
     return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
   await prisma.user.delete({ where: { id: req.params.id } });

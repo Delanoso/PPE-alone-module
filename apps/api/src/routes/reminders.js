@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
+router.use(requireCompany);
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:5173';
 
 function hasNoSizes(sizes) {
@@ -31,17 +33,18 @@ function toWhatsAppNumber(phone) {
   return '27' + cleaned;
 }
 
-async function ensureToken(personId) {
+async function ensureToken(personId, companyId) {
   let rec = await prisma.sizeRequestRecipient.findFirst({
     where: { person_id: personId },
   });
   if (rec && rec.responded_at) return null;
   if (!rec) {
-    let sr = await prisma.sizeRequest.findFirst({ where: { name: 'PPE Size Reminders' } });
+    const srName = companyId ? `PPE Size Reminders - ${companyId}` : 'PPE Size Reminders';
+    let sr = await prisma.sizeRequest.findFirst({ where: { name: srName } });
     if (!sr) {
       sr = await prisma.sizeRequest.create({
         data: {
-          name: 'PPE Size Reminders',
+          name: srName,
           created_at: new Date().toISOString(),
           created_by: null,
         },
@@ -63,13 +66,13 @@ async function ensureToken(personId) {
 
 router.get('/', async (req, res) => {
   const people = await prisma.person.findMany({
-    where: { status: 'ACTIVE' },
+    where: { company_id: req.companyId, status: 'ACTIVE' },
     include: { personSizes: true },
   });
   const driversWithoutSizes = [];
   for (const p of people) {
     if (!hasNoSizes(p.personSizes)) continue;
-    const token = await ensureToken(p.id);
+    const token = await ensureToken(p.id, req.companyId);
     if (!token) continue;
     const phones = parsePhoneNumbers(p.mobile_number);
     const whatsappNumbers = phones.map(toWhatsAppNumber).filter(Boolean);

@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
+router.use(requireCompany);
 
 router.get('/', async (req, res) => {
   const issues = await prisma.ppeIssue.findMany({
+    where: { person: { company_id: req.companyId } },
     include: { person: true },
   });
   const data = issues.map((i) => ({ ...i, person_name: i.person?.full_name || i.person_name }));
@@ -14,7 +17,7 @@ router.get('/', async (req, res) => {
 
 router.get('/signed', async (req, res) => {
   const issues = await prisma.ppeIssue.findMany({
-    where: { status: 'SIGNED' },
+    where: { status: 'SIGNED', person: { company_id: req.companyId } },
     include: {
       person: { include: { department: true } },
       ppeIssueItems: { include: { ppeItem: true } },
@@ -44,14 +47,14 @@ router.get('/signed', async (req, res) => {
 
 router.get('/issuable-items', async (req, res) => {
   const items = await prisma.ppeItem.findMany({
-    where: { is_active: true },
+    where: { company_id: req.companyId, is_active: true },
   });
   res.json({ success: true, data: items });
 });
 
 router.get('/:id', async (req, res) => {
-  const issue = await prisma.ppeIssue.findUnique({
-    where: { id: req.params.id },
+  const issue = await prisma.ppeIssue.findFirst({
+    where: { id: req.params.id, person: { company_id: req.companyId } },
     include: { person: { include: { department: true } }, ppeIssueItems: { include: { ppeItem: true } } },
   });
   if (!issue) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
@@ -88,7 +91,7 @@ router.post('/', async (req, res) => {
   const count = await prisma.ppeIssue.count();
   const today = new Date();
   const issueNumber = `ISS-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}-${String(count + 101)}`;
-  const person = await prisma.person.findUnique({ where: { id: person_id } });
+  const person = await prisma.person.findFirst({ where: { id: person_id, company_id: req.companyId } });
   if (!person) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Person not found' } });
 
   const issue = await prisma.ppeIssue.create({
@@ -145,8 +148,8 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/:id/sign-link', async (req, res) => {
-  const issue = await prisma.ppeIssue.findUnique({
-    where: { id: req.params.id },
+  const issue = await prisma.ppeIssue.findFirst({
+    where: { id: req.params.id, person: { company_id: req.companyId } },
     include: { person: true },
   });
   if (!issue) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
@@ -167,12 +170,12 @@ router.post('/:id/add-item', async (req, res) => {
   if (!ppe_item_id) {
     return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'ppe_item_id required' } });
   }
-  const issue = await prisma.ppeIssue.findUnique({
-    where: { id: req.params.id },
+  const issue = await prisma.ppeIssue.findFirst({
+    where: { id: req.params.id, person: { company_id: req.companyId } },
     include: { person: true },
   });
   if (!issue) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
-  const ppeItem = await prisma.ppeItem.findUnique({ where: { id: ppe_item_id } });
+  const ppeItem = await prisma.ppeItem.findFirst({ where: { id: ppe_item_id, company_id: req.companyId } });
   if (!ppeItem) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'PPE item not found' } });
 
   const newItem = await prisma.ppeIssueItem.create({
@@ -213,6 +216,10 @@ router.post('/:id/add-item', async (req, res) => {
 });
 
 router.post('/:id/cancel', async (req, res) => {
+  const issue = await prisma.ppeIssue.findFirst({
+    where: { id: req.params.id, person: { company_id: req.companyId } },
+  });
+  if (!issue) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   try {
     await prisma.ppeIssue.update({
       where: { id: req.params.id },

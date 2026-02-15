@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { seedDb } from './db.js';
+import { seedDb, ensureMultiTenant, ensureDepartments } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { departmentsRouter } from './routes/departments.js';
@@ -13,16 +13,19 @@ import { sizeRequestsRouter, sizesPublicRouter } from './routes/size-requests.js
 import { remindersRouter } from './routes/reminders.js';
 import { reportsRouter } from './routes/reports.js';
 import { auditRouter } from './routes/audit.js';
+import { adminRouter } from './routes/admin.js';
 import { authMiddleware } from './middleware/auth.js';
 
 const app = express();
 
 // Ensure DB is seeded once (for Vercel serverless cold start)
-let seedPromise = null;
+let initPromise = null;
 app.use(async (_req, _res, next) => {
   try {
-    if (!seedPromise) seedPromise = seedDb();
-    await seedPromise;
+    if (!initPromise) {
+      initPromise = seedDb().then(() => ensureMultiTenant()).then(() => ensureDepartments());
+    }
+    await initPromise;
     next();
   } catch (err) {
     next(err);
@@ -57,6 +60,7 @@ app.use('/api/v1/reminders', authMiddleware, remindersRouter);
 app.use('/api/v1/sizes', sizesPublicRouter);
 app.use('/api/v1/reports', authMiddleware, reportsRouter);
 app.use('/api/v1/audit', authMiddleware, auditRouter);
+app.use('/api/v1/admin', authMiddleware, adminRouter);
 app.use('/api/v1/sign', signPublicRouter);
 
 // Central error handler (Vercel: avoid swallowed errors affecting function state)

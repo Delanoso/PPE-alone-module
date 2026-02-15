@@ -1,12 +1,15 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '../db.js';
+import { requireCompany } from '../middleware/companyScope.js';
 
 const router = Router();
 const signPublicRouter = Router();
+router.use(requireCompany);
 
 router.get('/requests', async (req, res) => {
   const requests = await prisma.signatureRequest.findMany({
+    where: { issue: { person: { company_id: req.companyId } } },
     include: { issue: true },
   });
   const persons = await prisma.person.findMany({ where: { id: { in: requests.map((r) => r.person_id) } } });
@@ -20,8 +23,8 @@ router.get('/requests', async (req, res) => {
 });
 
 router.get('/requests/:id', async (req, res) => {
-  const reqObj = await prisma.signatureRequest.findUnique({
-    where: { id: req.params.id },
+  const reqObj = await prisma.signatureRequest.findFirst({
+    where: { id: req.params.id, issue: { person: { company_id: req.companyId } } },
     include: { issue: true },
   });
   if (!reqObj) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
