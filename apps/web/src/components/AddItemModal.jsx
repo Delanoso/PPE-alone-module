@@ -13,17 +13,44 @@ function toWhatsAppNumber(phone) {
 const ALTERNATIVE_WHATSAPP = '27608842557';
 const ALTERNATIVE_NUMBER = '060 884 2557';
 
-export default function AddItemModal({ issue, issuableItems, onClose, onSuccess }) {
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
+const TROUSER_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
+const SHOE_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
+const GLOVE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const HELMET_SIZES = ['S', 'M', 'L', 'XL'];
+const SIZE_OPTIONS = {
+  coverall_size: TROUSER_SIZES,
+  shoe_size: SHOE_SIZES,
+  reflective_vest_size: CLOTHING_SIZES,
+  clothing_size: CLOTHING_SIZES,
+  jacket_size: CLOTHING_SIZES,
+  trouser_size: TROUSER_SIZES,
+  glove_size: GLOVE_SIZES,
+  helmet_size: HELMET_SIZES,
+  rain_suit_size: CLOTHING_SIZES,
+};
+
+export default function AddItemModal({ issue, onClose, onSuccess }) {
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState('');
   const [sizeLabel, setSizeLabel] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (issuableItems?.length) setItems(issuableItems);
-  }, [issuableItems]);
+    if (issue?.person_id) {
+      setLoading(true);
+      api(`/issues/issuable-items?person_id=${issue.person_id}`)
+        .then((r) => setItems(r.data || []))
+        .catch(() => setItems([]))
+        .finally(() => setLoading(false));
+    } else {
+      setItems([]);
+      setLoading(false);
+    }
+  }, [issue?.person_id]);
 
   const sel = items.find((i) => i.id === selectedItem);
   const sizeKey = sel?.size_key;
@@ -77,6 +104,7 @@ export default function AddItemModal({ issue, issuableItems, onClose, onSuccess 
 
         {!result ? (
           <form onSubmit={handleSubmit}>
+            {loading && <p className="muted">Loading items...</p>}
             {error && <div className="form-error">{error}</div>}
             <label>
               <span>Item</span>
@@ -92,18 +120,9 @@ export default function AddItemModal({ issue, issuableItems, onClose, onSuccess 
                 <span>Size</span>
                 <select value={sizeLabel} onChange={(e) => setSizeLabel(e.target.value)}>
                   <option value="">Size</option>
-                  {sizeKey === 'coverall_size' &&
-                    Array.from({ length: 29 }, (_, j) => 28 + j).map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  {sizeKey === 'shoe_size' &&
-                    Array.from({ length: 12 }, (_, j) => 4 + j).map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  {(sizeKey === 'reflective_vest_size' || sizeKey === 'clothing_size') &&
-                    ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                  {(SIZE_OPTIONS[sizeKey] || CLOTHING_SIZES).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
                 </select>
               </label>
             )}

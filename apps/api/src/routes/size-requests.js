@@ -152,7 +152,7 @@ router.post('/:id/send', async (req, res) => {
     data: {
       message: `Sent to ${recipients.length} recipient(s)`,
       sent_count: recipients.length,
-      message_template: 'Please send us your sizes for: Reflector vest, Shirt size, Overalls Pants size, and Safety Shoe size. Submit here: {{link}}',
+      message_template: 'Please submit your PPE sizes at {{link}}',
     },
   });
 });

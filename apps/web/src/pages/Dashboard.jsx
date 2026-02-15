@@ -23,7 +23,11 @@ export default function Dashboard() {
   const total = people.length;
   const withSizes = people.filter((p) => {
     const s = p.size_profile || {};
-    return s.coverall_size || s.shoe_size || s.reflective_vest_size || s.clothing_size;
+    const ppeItems = p.ppe_items || [];
+    const keysToCheck = ppeItems.length > 0
+      ? ppeItems.filter((i) => i.size_key).map((i) => i.size_key)
+      : ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size'];
+    return keysToCheck.every((k) => s[k] && String(s[k]).trim());
   }).length;
 
   const byDept = {};

@@ -45,7 +45,43 @@ router.get('/signed', async (req, res) => {
   res.json({ success: true, data });
 });
 
+const DEFAULT_PPE_NAMES = ['Overall pants', 'Safety boots', 'Reflector vest', 'Shirt'];
+
 router.get('/issuable-items', async (req, res) => {
+  const personId = req.query.person_id;
+  if (personId) {
+    const person = await prisma.person.findFirst({
+      where: { id: personId, company_id: req.companyId },
+      include: {
+        department: {
+          include: {
+            departmentPpeItems: {
+              orderBy: { display_order: 'asc' },
+              include: { ppeItem: true },
+            },
+          },
+        },
+      },
+    });
+    if (person?.department?.departmentPpeItems?.length) {
+      const items = person.department.departmentPpeItems.map((dpi) => dpi.ppeItem).filter(Boolean);
+      return res.json({ success: true, data: items });
+    }
+    if (person?.department_id) {
+      const dept = await prisma.department.findFirst({
+        where: { id: person.department_id },
+        include: {
+          departmentPpeItems: { orderBy: { display_order: 'asc' }, include: { ppeItem: true } },
+        },
+      });
+      const ppeItems = (dept?.departmentPpeItems || []).map((dpi) => dpi.ppeItem).filter(Boolean);
+      if (ppeItems.length) return res.json({ success: true, data: ppeItems });
+    }
+    const defaultItems = await prisma.ppeItem.findMany({
+      where: { company_id: req.companyId, is_active: true, name: { in: DEFAULT_PPE_NAMES } },
+    });
+    if (defaultItems.length) return res.json({ success: true, data: defaultItems });
+  }
   const items = await prisma.ppeItem.findMany({
     where: { company_id: req.companyId, is_active: true },
   });

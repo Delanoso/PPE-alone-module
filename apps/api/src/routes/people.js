@@ -13,11 +13,13 @@ function enrichPerson(p) {
   const dept = p.department;
   const sub = p.sub_department;
   const sizes = p.personSizes;
+  const ppe_items = (dept?.departmentPpeItems || []).map((dpi) => dpi.ppeItem).filter(Boolean);
   return {
     ...p,
     department_name: dept?.name,
     sub_department_name: sub?.name,
     size_profile: sizes ? { ...sizes, person_id: sizes.person_id } : null,
+    ppe_items: ppe_items.length ? ppe_items : null,
   };
 }
 
@@ -161,7 +163,18 @@ router.get('/', async (req, res) => {
   }
   let people = await prisma.person.findMany({
     where,
-    include: { department: true, sub_department: true, personSizes: true },
+    include: {
+      department: {
+        include: {
+          departmentPpeItems: {
+            orderBy: { display_order: 'asc' },
+            include: { ppeItem: true },
+          },
+        },
+      },
+      sub_department: true,
+      personSizes: true,
+    },
   });
   if (search) {
     const q = search.toLowerCase();

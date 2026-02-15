@@ -8,6 +8,23 @@ import './Issuing.css';
 const ALTERNATIVE_NUMBER = '060 884 2557';
 const ALTERNATIVE_WHATSAPP = '27608842557';
 
+const TROUSER_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
+const SHOE_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
+const GLOVE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const HELMET_SIZES = ['S', 'M', 'L', 'XL'];
+const SIZE_OPTIONS = {
+  coverall_size: TROUSER_SIZES,
+  shoe_size: SHOE_SIZES,
+  reflective_vest_size: CLOTHING_SIZES,
+  clothing_size: CLOTHING_SIZES,
+  jacket_size: CLOTHING_SIZES,
+  trouser_size: TROUSER_SIZES,
+  glove_size: GLOVE_SIZES,
+  helmet_size: HELMET_SIZES,
+  rain_suit_size: CLOTHING_SIZES,
+};
+
 function toWhatsAppNumber(phone) {
   if (!phone) return null;
   const cleaned = phone.replace(/\D/g, '');
@@ -30,9 +47,16 @@ export default function Issuing() {
 
   useEffect(() => {
     api('/people').then((r) => setPeople(r.data || []));
-    api('/issues/issuable-items').then((r) => setItems(r.data || []));
     api('/issues').then((r) => setIssues(r.data || []));
   }, []);
+
+  useEffect(() => {
+    if (selectedPerson) {
+      api(`/issues/issuable-items?person_id=${selectedPerson}`).then((r) => setItems(r.data || []));
+    } else {
+      setItems([]);
+    }
+  }, [selectedPerson]);
 
   const person = people.find((p) => p.id === selectedPerson);
   const sizeProfile = person?.size_profile || {};
@@ -172,7 +196,7 @@ export default function Issuing() {
     <div className="issuing-page">
       <header className="page-header">
         <h1>Issue PPE</h1>
-        <p>Issue the 4 PPE items to drivers. Driver signs via link (WhatsApp or web).</p>
+        <p>Issue PPE to drivers based on their department. Driver signs via link (WhatsApp or web).</p>
       </header>
 
       <div className="issuing-grid">
@@ -196,7 +220,7 @@ export default function Issuing() {
                 <strong>Items (from driver profile)</strong>
               </div>
               {lines.map((line, i) => (
-                <div key={i} className="line-row four-items">
+                <div key={i} className="line-row">
                   <span className="item-name">{line.ppe_item_name}</span>
                   <select
                     value={line.size_label}
@@ -204,18 +228,9 @@ export default function Issuing() {
                     className="size-select"
                   >
                     <option value="">Size</option>
-                    {line.size_key === 'coverall_size' &&
-                      Array.from({ length: 29 }, (_, j) => 28 + j).map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    {line.size_key === 'shoe_size' &&
-                      Array.from({ length: 12 }, (_, j) => 4 + j).map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    {(line.size_key === 'reflective_vest_size' || line.size_key === 'clothing_size') &&
-                      ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'].map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
+                    {(SIZE_OPTIONS[line.size_key] || CLOTHING_SIZES).map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </div>
               ))}
@@ -271,7 +286,7 @@ export default function Issuing() {
               </a>
             </div>
             <p className="muted hint">
-              Driver opens the link on phone or computer and signs for each of the 4 items.
+              Driver opens the link on phone or computer and signs for each item.
             </p>
           </section>
         )}
@@ -326,7 +341,6 @@ export default function Issuing() {
       {addItemIssue && (
         <AddItemModal
           issue={addItemIssue}
-          issuableItems={items}
           onClose={() => setAddItemIssue(null)}
           onSuccess={() => api('/issues').then((r) => setIssues(r.data || []))}
         />
