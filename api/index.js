@@ -1,19 +1,5 @@
-// Vercel serverless entry: runs Express API and seeds DB once per cold start.
-let initPromise;
+// Vercel serverless: export the Express app so Vercel runs it as a single function.
+// DB seeding runs once via middleware in app.js (cold start).
+import app from '../apps/api/src/app.js';
 
-async function getApp() {
-  if (!initPromise) {
-    initPromise = (async () => {
-      const { seedDb } = await import('../apps/api/src/db.js');
-      await seedDb();
-      const { default: app } = await import('../apps/api/src/app.js');
-      return app;
-    })();
-  }
-  return initPromise;
-}
-
-export default async function handler(req, res) {
-  const app = await getApp();
-  app(req, res);
-}
+export default app;

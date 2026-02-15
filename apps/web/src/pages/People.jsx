@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { api, getApiBase } from '../services/api';
 import './People.css';
 
 export default function People() {
@@ -37,13 +37,11 @@ export default function People() {
     if (!file) return;
     setImporting(true);
     const token = localStorage.getItem('ppe_token');
-    const host = window.location?.hostname || '';
-    const isLocal = host === 'localhost' || host === '127.0.0.1';
-    const apiBase = import.meta.env.VITE_API_BASE ?? (isLocal ? 'http://localhost:3001' : '');
     const fd = new FormData();
     fd.append('file', file);
-    fetch(`${apiBase}/api/v1/people/import`, {
+    fetch(`${getApiBase()}/api/v1/people/import`, {
       method: 'POST',
+      cache: 'no-store',
       headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': 'true' },
       body: fd,
     })
@@ -63,11 +61,9 @@ export default function People() {
 
   const handleExportSizes = () => {
     const token = localStorage.getItem('ppe_token');
-    const host = window.location?.hostname || '';
-    const isLocal = host === 'localhost' || host === '127.0.0.1';
-    const apiBase = import.meta.env.VITE_API_BASE ?? (isLocal ? 'http://localhost:3001' : '');
-    const url = `${apiBase}/api/v1/people/export/sizes`;
+    const url = `${getApiBase()}/api/v1/people/export/sizes`;
     fetch(url, {
+      cache: 'no-store',
       headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': 'true' },
     })
       .then((r) => {

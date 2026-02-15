@@ -1,6 +1,8 @@
 # Deploying to Vercel
 
-This project is set up to run on Vercel: the **web app** is built and served as static files, and the **API** runs as a serverless function. You need a **PostgreSQL** database (Vercel does not support SQLite in serverless).
+This project is set up to run **fully** on Vercel: the **web app** is built and served as static files (with SPA routing), and the **API** runs as a single serverless function. You need a **PostgreSQL** database (Vercel does not support SQLite in serverless).
+
+**What works on Vercel:** Login, dashboard, people, departments, PPE catalog, stock, issuing, signatures, size requests, reminders, reports, audit, and people import (Excel upload). The app seeds the database on first request.
 
 ## 1. Create a PostgreSQL database
 

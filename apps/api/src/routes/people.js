@@ -203,18 +203,32 @@ router.post('/', async (req, res) => {
   res.status(201).json({ success: true, data: { id: person.id } });
 });
 
+const PERSON_FIELDS = ['employee_number', 'first_name', 'last_name', 'full_name', 'mobile_number', 'email', 'department_id', 'sub_department_id', 'job_title', 'status', 'employment_type'];
+const SIZE_KEYS = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size'];
+
 router.patch('/:id', async (req, res) => {
   const person = await prisma.person.findUnique({ where: { id: req.params.id } });
   if (!person) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   const { first_name, last_name, ...rest } = req.body;
-  const update = { ...rest };
-  if (first_name) update.first_name = first_name;
-  if (last_name) update.last_name = last_name;
-  if (first_name || last_name) update.full_name = `${update.first_name ?? person.first_name} ${update.last_name ?? person.last_name}`;
 
-  const sizeKeys = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size'];
+  const update = {};
+  PERSON_FIELDS.forEach((k) => {
+    if (rest[k] !== undefined) {
+      if (k === 'department_id' || k === 'sub_department_id') {
+        if (rest[k] !== '' && rest[k] != null) update[k] = rest[k];
+      } else {
+        update[k] = rest[k];
+      }
+    }
+  });
+  if (first_name !== undefined) update.first_name = first_name;
+  if (last_name !== undefined) update.last_name = last_name;
+  if (first_name !== undefined || last_name !== undefined) {
+    update.full_name = `${update.first_name ?? person.first_name} ${update.last_name ?? person.last_name}`;
+  }
+
   const sizeUpdates = {};
-  sizeKeys.forEach((k) => { if (req.body[k] !== undefined) sizeUpdates[k] = req.body[k]; });
+  SIZE_KEYS.forEach((k) => { if (req.body[k] !== undefined) sizeUpdates[k] = req.body[k] || null; });
   if (Object.keys(sizeUpdates).length) {
     await prisma.personSizes.upsert({
       where: { person_id: req.params.id },
@@ -225,7 +239,7 @@ router.patch('/:id', async (req, res) => {
 
   const updated = await prisma.person.update({
     where: { id: req.params.id },
-    data: update,
+    data: Object.keys(update).length ? update : { full_name: person.full_name },
     include: { department: true, sub_department: true, personSizes: true },
   });
   res.json({ success: true, data: enrichPerson(updated) });

@@ -1,13 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import SignatureCanvas from 'react-signature-canvas';
+import { getApiBase } from '../services/api';
 import './SignPublic.css';
-
-function apiBase() {
-  const host = window.location?.hostname || '';
-  const isLocal = host === 'localhost' || host === '127.0.0.1';
-  return import.meta.env.VITE_API_BASE ?? (isLocal ? 'http://localhost:3001' : '');
-}
 
 export default function SignPublic() {
   const { token } = useParams();
@@ -22,7 +17,7 @@ export default function SignPublic() {
   const padRefs = useRef({});
 
   useEffect(() => {
-    fetch(`${apiBase()}/api/v1/sign/public/${token}`, { headers: { 'ngrok-skip-browser-warning': 'true' } })
+    fetch(`${getApiBase()}/api/v1/sign/public/${token}`, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': 'true' } })
       .then((r) => r.text())
       .then((text) => {
         const json = text ? (() => { try { return JSON.parse(text); } catch { return {}; } })() : {};
@@ -80,8 +75,9 @@ export default function SignPublic() {
         signed_name: signedName.trim(),
         signature_data: getPadData(it.issue_item_id),
       }));
-      const res = await fetch(`${apiBase()}/api/v1/sign/public/${token}`, {
+      const res = await fetch(`${getApiBase()}/api/v1/sign/public/${token}`, {
         method: 'POST',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify({
           item_signatures: itemSigs,

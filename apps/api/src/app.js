@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { seedDb } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { departmentsRouter } from './routes/departments.js';
@@ -15,6 +16,26 @@ import { auditRouter } from './routes/audit.js';
 import { authMiddleware } from './middleware/auth.js';
 
 const app = express();
+
+// Ensure DB is seeded once (for Vercel serverless cold start)
+let seedPromise = null;
+app.use(async (_req, _res, next) => {
+  try {
+    if (!seedPromise) seedPromise = seedDb();
+    await seedPromise;
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Vercel: rewrite sends /api?path=v1/health — restore path so Express routes match
+app.use((req, _res, next) => {
+  if (process.env.VERCEL && req.url.startsWith('/api') && typeof req.query?.path === 'string') {
+    req.url = '/api/' + req.query.path;
+  }
+  next();
+});
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -37,5 +58,11 @@ app.use('/api/v1/sizes', sizesPublicRouter);
 app.use('/api/v1/reports', authMiddleware, reportsRouter);
 app.use('/api/v1/audit', authMiddleware, auditRouter);
 app.use('/api/v1/sign', signPublicRouter);
+
+// Central error handler (Vercel: avoid swallowed errors affecting function state)
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ success: false, error: { message: err.message || 'Internal server error' } });
+});
 
 export default app;

@@ -1,16 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { getApiBase } from '../services/api';
 import './SizesPublic.css';
 
 const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
 const OVERALL_PANTS_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
 const SAFETYBOOT_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
-
-function apiBase() {
-  const host = window.location?.hostname || '';
-  const isLocal = host === 'localhost' || host === '127.0.0.1';
-  return import.meta.env.VITE_API_BASE ?? (isLocal ? 'http://localhost:3001' : '');
-}
 
 export default function SizesPublic() {
   const { token } = useParams();
@@ -28,7 +23,7 @@ export default function SizesPublic() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`${apiBase()}/api/v1/sizes/public/${token}`, { headers: { 'ngrok-skip-browser-warning': 'true' } })
+    fetch(`${getApiBase()}/api/v1/sizes/public/${token}`, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': 'true' } })
       .then((r) => r.text())
       .then((text) => {
         const json = text ? (() => { try { return JSON.parse(text); } catch { return {}; } })() : {};
@@ -54,8 +49,9 @@ export default function SizesPublic() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`${apiBase()}/api/v1/sizes/public/${token}`, {
+      const res = await fetch(`${getApiBase()}/api/v1/sizes/public/${token}`, {
         method: 'POST',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify(form),
       });

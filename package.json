@@ -10,7 +10,8 @@
     "free-ports": "npx --yes kill-port 3001 5173",
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
-    "ngrok": "ngrok http 5173",
+    "ngrok": "ngrok http 127.0.0.1:5173",
+    "dev:watch": "node scripts/watch-and-restart.js",
     "build": "npm run build -w apps/web",
     "build:vercel": "npm exec -w apps/api -- prisma generate --schema=prisma/schema.postgresql.prisma && npm run build",
     "start": "npm run start -w apps/api"

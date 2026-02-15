@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
+import { getApiBase } from './api';
 
 const AuthContext = createContext(null);
 
@@ -10,10 +11,9 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     setLoading(true);
     try {
-      // Use VITE_API_BASE when set (e.g. ngrok API tunnel). Else: direct API on localhost, or '' for same-origin proxy.
-      const apiBase = import.meta.env.VITE_API_BASE ?? (['localhost', '127.0.0.1'].includes(window.location?.hostname || '') ? 'http://127.0.0.1:3001' : '');
-      const res = await fetch(`${apiBase}/api/v1/auth/login`, {
+      const res = await fetch(`${getApiBase()}/api/v1/auth/login`, {
         method: 'POST',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify({ username, password }),
       });
