@@ -22,7 +22,18 @@ export default function Departments() {
 
   useEffect(() => {
     load();
-    api('/ppe/items').then((r) => setPpeItems(r.data || []));
+    api('/ppe/items').then((r) => {
+      const data = r.data || [];
+      const seenIds = new Set();
+      const seenNames = new Set();
+      const unique = data.filter((item) => {
+        if (seenIds.has(item.id) || seenNames.has(item.name)) return false;
+        seenIds.add(item.id);
+        seenNames.add(item.name);
+        return true;
+      });
+      setPpeItems(unique);
+    });
   }, []);
 
   async function load() {
@@ -170,17 +181,8 @@ export default function Departments() {
       {addingDept && (
         <form onSubmit={handleAddDept} className="dept-add-form dept-form-with-ppe">
           <div className="dept-form-row">
-            <input
-              type="text"
-              placeholder="Department name (e.g. Drivers)"
-              value={newDeptName}
-              onChange={(e) => setNewDeptName(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className="dept-form-row">
             <label className="ppe-select-label">PPE items for this department (only these will show on People page)</label>
-            <div className="ppe-checklist">
+            <div className="ppe-checklist ppe-checklist-cols-10">
               {ppeItems.map((item) => (
                 <label key={item.id} className="ppe-check-item">
                   <input
@@ -188,18 +190,27 @@ export default function Departments() {
                     checked={newDeptPpeIds.includes(item.id)}
                     onChange={() => togglePpeSelection(item.id, newDeptPpeIds, setNewDeptPpeIds)}
                   />
-                  <span>{item.name}</span>
+                  <span className="ppe-check-label">{item.name}</span>
                 </label>
               ))}
             </div>
           </div>
-          <div className="dept-form-actions">
-            <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? 'Adding...' : 'Add'}
-            </button>
-            <button type="button" className="btn-secondary" onClick={() => { setAddingDept(false); setNewDeptName(''); setNewDeptPpeIds([]); setError(''); }}>
-              Cancel
-            </button>
+          <div className="dept-form-row dept-form-footer">
+            <input
+              type="text"
+              placeholder="Department name (e.g. Drivers)"
+              value={newDeptName}
+              onChange={(e) => setNewDeptName(e.target.value)}
+              className="dept-name-input"
+            />
+            <div className="dept-form-actions">
+              <button type="submit" className="btn-primary" disabled={saving}>
+                {saving ? 'Adding...' : 'Add'}
+              </button>
+              <button type="button" className="btn-secondary" onClick={() => { setAddingDept(false); setNewDeptName(''); setNewDeptPpeIds([]); setError(''); }}>
+                Cancel
+              </button>
+            </div>
           </div>
         </form>
       )}
@@ -230,17 +241,8 @@ export default function Departments() {
                 {editingDept === d.id && (
                   <form onSubmit={handleEditDept} className="dept-edit-form" onClick={(e) => e.stopPropagation()}>
                     <div className="dept-form-row">
-                      <label>Department name</label>
-                      <input
-                        type="text"
-                        value={editDeptName}
-                        onChange={(e) => setEditDeptName(e.target.value)}
-                        autoFocus
-                      />
-                    </div>
-                    <div className="dept-form-row">
                       <label className="ppe-select-label">PPE items for this department</label>
-                      <div className="ppe-checklist">
+                      <div className="ppe-checklist ppe-checklist-cols-10">
                         {ppeItems.map((item) => (
                           <label key={item.id} className="ppe-check-item">
                             <input
@@ -248,14 +250,23 @@ export default function Departments() {
                               checked={editDeptPpeIds.includes(item.id)}
                               onChange={() => togglePpeSelection(item.id, editDeptPpeIds, setEditDeptPpeIds)}
                             />
-                            <span>{item.name}</span>
+                            <span className="ppe-check-label">{item.name}</span>
                           </label>
                         ))}
                       </div>
                     </div>
-                    <div className="dept-form-actions">
-                      <button type="submit" className="btn-primary" disabled={saving}>Save</button>
-                      <button type="button" className="btn-secondary" onClick={() => { setEditingDept(null); setEditDeptName(''); setEditDeptPpeIds([]); }}>Cancel</button>
+                    <div className="dept-form-row dept-form-footer">
+                      <input
+                        type="text"
+                        value={editDeptName}
+                        onChange={(e) => setEditDeptName(e.target.value)}
+                        placeholder="Department name"
+                        className="dept-name-input"
+                      />
+                      <div className="dept-form-actions">
+                        <button type="submit" className="btn-primary" disabled={saving}>Save</button>
+                        <button type="button" className="btn-secondary" onClick={() => { setEditingDept(null); setEditDeptName(''); setEditDeptPpeIds([]); }}>Cancel</button>
+                      </div>
                     </div>
                   </form>
                 )}

@@ -316,6 +316,72 @@ export async function bootstrapNewCompany(companyId) {
   });
 }
 
+/** Add missing PPE items to existing companies (for companies seeded before catalog expansion). */
+export async function ensurePpeCatalog() {
+  const companies = await prisma.company.findMany({ where: { status: 'ACTIVE' } });
+  for (const company of companies) {
+    const existing = await prisma.ppeItem.findMany({
+      where: { company_id: company.id },
+      select: { sku: true },
+    });
+    const existingSkus = new Set(existing.map((e) => e.sku));
+    const toAdd = PPE_ITEMS.filter((item) => !existingSkus.has(item.sku));
+    if (toAdd.length === 0) continue;
+
+    let categories = await prisma.ppeCategory.findMany({ where: { company_id: company.id } });
+    if (categories.length === 0) {
+      for (const name of PPE_CATEGORIES) {
+        await prisma.ppeCategory.create({
+          data: { id: uuid(), name, description: `${name} equipment`, company_id: company.id },
+        });
+      }
+      categories = await prisma.ppeCategory.findMany({ where: { company_id: company.id } });
+    }
+    const catMap = {};
+    categories.forEach((c) => { catMap[c.name] = c.id; });
+
+    let loc = await prisma.stockLocation.findFirst({ where: { company_id: company.id } });
+    if (!loc) {
+      loc = await prisma.stockLocation.create({
+        data: { id: uuid(), code: 'MAIN-PPE', name: 'Main PPE Store', is_active: true, company_id: company.id },
+      });
+    }
+
+    for (const item of toAdd) {
+      const catId = catMap[item.category] || categories[0]?.id;
+      if (!catId) continue;
+      const ppeItem = await prisma.ppeItem.create({
+        data: {
+          id: uuid(),
+          category_id: catId,
+          sku: item.sku,
+          name: item.name,
+          category_name: item.category,
+          size_required: item.sizeRequired,
+          size_key: item.sizeKey,
+          min_stock_threshold: 10,
+          reorder_level: 20,
+          is_active: true,
+          company_id: company.id,
+        },
+      });
+      const sizes = item.sizeRequired ? item.sizes : [null];
+      for (const s of sizes) {
+        await prisma.stockBalance.create({
+          data: {
+            id: uuid(),
+            location_id: loc.id,
+            ppe_item_id: ppeItem.id,
+            size_label: s,
+            on_hand_qty: 0,
+            ppe_item_name: ppeItem.name,
+          },
+        }).catch(() => {});
+      }
+    }
+  }
+}
+
 /** Ensure existing departments have PPE config. If a department has no DepartmentPpeItem, add default 4 items. */
 export async function ensureDepartmentPpeConfig() {
   const companies = await prisma.company.findMany({ where: { status: 'ACTIVE' } });
