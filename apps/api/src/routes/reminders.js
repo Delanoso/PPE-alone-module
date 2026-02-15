@@ -7,14 +7,18 @@ const router = Router();
 router.use(requireCompany);
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:5173';
 
-function hasNoSizes(sizes) {
+const DEFAULT_PPE_KEYS = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size'];
+
+function hasNoSizes(sizes, ppeItems) {
   if (!sizes) return true;
-  const hasAny =
-    (sizes.coverall_size && sizes.coverall_size.trim()) ||
-    (sizes.shoe_size && sizes.shoe_size.toString()) ||
-    (sizes.reflective_vest_size && sizes.reflective_vest_size.trim()) ||
-    (sizes.clothing_size && sizes.clothing_size.trim());
-  return !hasAny;
+  const keysToCheck = (ppeItems && ppeItems.length > 0)
+    ? ppeItems.filter((i) => i.size_key).map((i) => i.size_key)
+    : DEFAULT_PPE_KEYS;
+  for (const key of keysToCheck) {
+    const v = sizes[key];
+    if (!v || String(v).trim() === '') return true;
+  }
+  return false;
 }
 
 function parsePhoneNumbers(mobileNumber) {
@@ -67,15 +71,27 @@ async function ensureToken(personId, companyId) {
 router.get('/', async (req, res) => {
   const people = await prisma.person.findMany({
     where: { company_id: req.companyId, status: 'ACTIVE' },
-    include: { personSizes: true },
+    include: {
+      personSizes: true,
+      department: {
+        include: {
+          departmentPpeItems: {
+            orderBy: { display_order: 'asc' },
+            include: { ppeItem: true },
+          },
+        },
+      },
+    },
   });
   const driversWithoutSizes = [];
   for (const p of people) {
-    if (!hasNoSizes(p.personSizes)) continue;
+    const ppeItems = (p.department?.departmentPpeItems || []).map((dpi) => dpi.ppeItem).filter(Boolean);
+    if (!hasNoSizes(p.personSizes, ppeItems)) continue;
     const token = await ensureToken(p.id, req.companyId);
     if (!token) continue;
     const phones = parsePhoneNumbers(p.mobile_number);
     const whatsappNumbers = phones.map(toWhatsAppNumber).filter(Boolean);
+    const ppe_item_names = ppeItems.length > 0 ? ppeItems.map((i) => i.name) : ['overall pants', 'safety boot', 'reflector vest', 'shirt'];
     driversWithoutSizes.push({
       id: p.id,
       employee_number: p.employee_number,
@@ -84,6 +100,7 @@ router.get('/', async (req, res) => {
       phones: whatsappNumbers,
       link: `${PUBLIC_URL}/sizes/${token}`,
       token,
+      ppe_item_names,
     });
   }
 

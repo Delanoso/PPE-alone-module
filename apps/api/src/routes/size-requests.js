@@ -186,12 +186,25 @@ sizesPublicRouter.get('/public/:token', async (req, res) => {
     where: { token: req.params.token },
   });
   if (!r) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Invalid or expired link' } });
-  const person = await prisma.person.findUnique({ where: { id: r.person_id } });
+  const person = await prisma.person.findUnique({
+    where: { id: r.person_id },
+    include: {
+      department: {
+        include: {
+          departmentPpeItems: {
+            orderBy: { display_order: 'asc' },
+            include: { ppeItem: true },
+          },
+        },
+      },
+    },
+  });
   if (!person) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   if (r.responded_at) {
     return res.json({ success: true, data: { already_submitted: true, person_name: person.full_name } });
   }
   const sizes = await prisma.personSizes.findUnique({ where: { person_id: r.person_id } });
+  const ppe_items = (person.department?.departmentPpeItems || []).map((dpi) => dpi.ppeItem).filter(Boolean);
   res.json({
     success: true,
     data: {
@@ -199,9 +212,12 @@ sizesPublicRouter.get('/public/:token', async (req, res) => {
       person_name: person.full_name,
       current_sizes: sizes || {},
       already_submitted: false,
+      ppe_items,
     },
   });
 });
+
+const SIZE_KEYS = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size', 'jacket_size', 'trouser_size', 'glove_size', 'helmet_size', 'rain_suit_size'];
 
 sizesPublicRouter.post('/public/:token', async (req, res) => {
   const r = await prisma.sizeRequestRecipient.findFirst({
@@ -211,13 +227,11 @@ sizesPublicRouter.post('/public/:token', async (req, res) => {
   if (r.responded_at) {
     return res.json({ success: true, data: { message: 'Already submitted', already_submitted: true } });
   }
-  const { reflective_vest_size, clothing_size, coverall_size, trouser_size, shoe_size } = req.body;
   const sizeData = {};
-  if (reflective_vest_size !== undefined) sizeData.reflective_vest_size = reflective_vest_size;
-  if (clothing_size !== undefined) sizeData.clothing_size = clothing_size;
-  if (coverall_size !== undefined) { sizeData.coverall_size = coverall_size; sizeData.trouser_size = coverall_size; }
-  if (trouser_size !== undefined) sizeData.trouser_size = trouser_size;
-  if (shoe_size !== undefined) sizeData.shoe_size = shoe_size;
+  SIZE_KEYS.forEach((k) => {
+    if (req.body[k] !== undefined && req.body[k] !== null && req.body[k] !== '') sizeData[k] = req.body[k];
+  });
+  if (req.body.coverall_size !== undefined && req.body.coverall_size !== '' && !sizeData.trouser_size) sizeData.trouser_size = req.body.coverall_size;
   await prisma.personSizes.upsert({
     where: { person_id: r.person_id },
     create: { person_id: r.person_id, ...sizeData },

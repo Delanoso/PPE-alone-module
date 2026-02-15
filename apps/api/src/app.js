@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { seedDb, ensureMultiTenant, ensureDepartments } from './db.js';
+import { seedDb, ensureMultiTenant, ensureDepartments, ensureDepartmentPpeConfig } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { departmentsRouter } from './routes/departments.js';
@@ -23,7 +23,7 @@ let initPromise = null;
 app.use(async (_req, _res, next) => {
   try {
     if (!initPromise) {
-      initPromise = seedDb().then(() => ensureMultiTenant()).then(() => ensureDepartments());
+      initPromise = seedDb().then(() => ensureMultiTenant()).then(() => ensureDepartments()).then(() => ensureDepartmentPpeConfig());
     }
     await initPromise;
     next();

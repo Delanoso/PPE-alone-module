@@ -3,22 +3,37 @@ import { useParams } from 'react-router-dom';
 import { getApiBase } from '../services/api';
 import './SizesPublic.css';
 
-const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
-const OVERALL_PANTS_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
-const SAFETYBOOT_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
+const TROUSER_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
+const SHOE_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
+const GLOVE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const HELMET_SIZES = ['S', 'M', 'L', 'XL'];
+
+const SIZE_OPTIONS = {
+  coverall_size: TROUSER_SIZES,
+  shoe_size: SHOE_SIZES,
+  reflective_vest_size: CLOTHING_SIZES,
+  clothing_size: CLOTHING_SIZES,
+  jacket_size: CLOTHING_SIZES,
+  trouser_size: TROUSER_SIZES,
+  glove_size: GLOVE_SIZES,
+  helmet_size: HELMET_SIZES,
+  rain_suit_size: CLOTHING_SIZES,
+};
+
+const DEFAULT_PPE_ITEMS = [
+  { name: 'Reflector vest', size_key: 'reflective_vest_size' },
+  { name: 'Shirt', size_key: 'clothing_size' },
+  { name: 'Overalls / Pants', size_key: 'coverall_size' },
+  { name: 'Safety shoe (EU)', size_key: 'shoe_size' },
+];
 
 export default function SizesPublic() {
   const { token } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    reflective_vest_size: '',
-    clothing_size: '',
-    coverall_size: '',
-    trouser_size: '',
-    shoe_size: '',
-  });
+  const [form, setForm] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,14 +45,7 @@ export default function SizesPublic() {
         if (!json.success) throw new Error(json.error?.message || 'Failed to load');
         setData(json.data);
         if (json.data?.current_sizes) {
-          setForm((f) => ({
-            ...f,
-            reflective_vest_size: json.data.current_sizes.reflective_vest_size || '',
-            clothing_size: json.data.current_sizes.clothing_size || '',
-            coverall_size: json.data.current_sizes.coverall_size || '',
-            trouser_size: json.data.current_sizes.trouser_size || '',
-            shoe_size: json.data.current_sizes.shoe_size || '',
-          }));
+          setForm(json.data.current_sizes);
         }
       })
       .catch((e) => setError(e.message))
@@ -83,6 +91,11 @@ export default function SizesPublic() {
       </div>
     );
 
+  let sizeItems = (data?.ppe_items?.length > 0 ? data.ppe_items : DEFAULT_PPE_ITEMS).filter(
+    (item) => item.size_key && item.size_required !== false
+  );
+  if (sizeItems.length === 0) sizeItems = DEFAULT_PPE_ITEMS;
+
   return (
     <div className="sizes-public-page">
       <div className="sizes-public-card">
@@ -93,65 +106,27 @@ export default function SizesPublic() {
         <form onSubmit={handleSubmit}>
           {error && <div className="form-error">{error}</div>}
 
-          <label>
-            <span>Reflector vest size *</span>
-            <select
-              name="reflective_vest_size"
-              value={form.reflective_vest_size}
-              onChange={(e) => setForm((f) => ({ ...f, reflective_vest_size: e.target.value }))}
-              required
-            >
-              <option value="">Select...</option>
-              {VEST_AND_SHIRT_SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>Shirt size *</span>
-            <select
-              name="clothing_size"
-              value={form.clothing_size}
-              onChange={(e) => setForm((f) => ({ ...f, clothing_size: e.target.value }))}
-              required
-            >
-              <option value="">Select...</option>
-              {VEST_AND_SHIRT_SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>Overalls / Pants size *</span>
-            <select
-              name="coverall_size"
-              value={form.coverall_size || form.trouser_size}
-              onChange={(e) => setForm((f) => ({ ...f, coverall_size: e.target.value, trouser_size: e.target.value }))}
-              required
-            >
-              <option value="">Select...</option>
-              {OVERALL_PANTS_SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>Safety shoe size (EU) *</span>
-            <select
-              name="shoe_size"
-              value={form.shoe_size}
-              onChange={(e) => setForm((f) => ({ ...f, shoe_size: e.target.value }))}
-              required
-            >
-              <option value="">Select...</option>
-              {SAFETYBOOT_SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </label>
+          {sizeItems.map((item) => {
+            const key = item.size_key;
+            const options = SIZE_OPTIONS[key] || CLOTHING_SIZES;
+            const value = form[key] || '';
+            return (
+              <label key={item.id || key}>
+                <span>{item.name} *</span>
+                <select
+                  name={key}
+                  value={value}
+                  onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                  required
+                >
+                  <option value="">Select...</option>
+                  {options.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+            );
+          })}
 
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? 'Submitting...' : 'Submit sizes'}

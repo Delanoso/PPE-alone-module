@@ -3,6 +3,58 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, getApiBase } from '../services/api';
 import './People.css';
 
+function PeopleTable({ people, ppeColumns, showDeptCol, onDelete }) {
+  const handleDelete = async (p) => {
+    if (!confirm(`Delete ${p.full_name}?`)) return;
+    try {
+      await api(`/people/${p.id}`, { method: 'DELETE' });
+      onDelete?.(p);
+    } catch (e) {
+      alert(e.message || 'Failed to delete');
+    }
+  };
+  const getSize = (p, item) => {
+    const key = item.size_key;
+    if (!key) return '-';
+    return p.size_profile?.[key] || '-';
+  };
+  return (
+    <div className="card table-card">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>D NO</th>
+            <th>Name</th>
+            {showDeptCol && <th>Department</th>}
+            <th>Contact number</th>
+            {ppeColumns.map((item) => (
+              <th key={item.id}>{item.name}</th>
+            ))}
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {people.map((p) => (
+            <tr key={p.id}>
+              <td>{p.employee_number}</td>
+              <td>{p.full_name}</td>
+              {showDeptCol && <td>{p.department_name || '-'}</td>}
+              <td>{p.mobile_number}</td>
+              {ppeColumns.map((item) => (
+                <td key={item.id}>{getSize(p, item)}</td>
+              ))}
+              <td className="actions-cell">
+                <Link to={`/people/${p.id}/edit`} className="btn-link">Edit</Link>
+                <button type="button" className="btn-delete" onClick={() => handleDelete(p)} title="Delete">Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function People() {
   const [searchParams] = useSearchParams();
   const deptFromUrl = searchParams.get('department_id') || '';
@@ -44,6 +96,25 @@ export default function People() {
     }
     return true;
   });
+
+  const groupedByDept = departmentFilter
+    ? null
+    : filtered.reduce((acc, p) => {
+        const id = p.department_id || '_none';
+        if (!acc[id]) acc[id] = [];
+        acc[id].push(p);
+        return acc;
+      }, {});
+
+  const deptMap = Object.fromEntries((departments || []).map((d) => [d.id, d]));
+  const getPpeColumns = (deptId) => {
+    const dept = deptMap[deptId];
+    const items = dept?.ppe_items;
+    if (items && items.length > 0) return items;
+    return [];
+  };
+  const deptOrder = [...new Set(filtered.map((p) => p.department_id).filter(Boolean))];
+  const displayDepts = deptOrder.map((id) => deptMap[id]).filter(Boolean);
 
   const handleImport = (e) => {
     const file = e.target.files?.[0];
@@ -148,49 +219,53 @@ export default function People() {
         />
       </div>
 
-      <div className="card table-card">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>D NO</th>
-              <th>Name</th>
-              <th>Department</th>
-              <th>Contact number</th>
-              <th>Overall pants</th>
-              <th>Safety boot</th>
-              <th>Reflector vest</th>
-              <th>Shirt</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id}>
-                <td>{p.employee_number}</td>
-                <td>{p.full_name}</td>
-                <td>{p.department_name || '-'}</td>
-                <td>{p.mobile_number}</td>
-                <td>{p.size_profile?.coverall_size || '-'}</td>
-                <td>{p.size_profile?.shoe_size || '-'}</td>
-                <td>{p.size_profile?.reflective_vest_size || '-'}</td>
-                <td>{p.size_profile?.clothing_size || '-'}</td>
-                <td className="actions-cell">
-                  <Link to={`/people/${p.id}/edit`} className="btn-link">Edit</Link>
-                  <button
-                    type="button"
-                    className="btn-delete"
-                    onClick={() => handleDelete(p)}
-                    title="Delete driver"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && <p className="muted table-empty">No people found</p>}
-      </div>
+      {departmentFilter ? (
+        <PeopleTable
+          people={filtered}
+          ppeColumns={getPpeColumns(departmentFilter)}
+          showDeptCol
+          onDelete={(p) => setPeople((prev) => prev.filter((x) => x.id !== p.id))}
+        />
+      ) : groupedByDept && Object.keys(groupedByDept).length > 0 ? (
+        <div className="people-by-dept">
+          {displayDepts.map((dept) => {
+            const rows = groupedByDept[dept.id] || [];
+            if (rows.length === 0) return null;
+            return (
+              <div key={dept.id} className="people-section">
+                <h2 className="people-section-title">{dept.name}</h2>
+                <PeopleTable
+                  people={rows}
+                  ppeColumns={getPpeColumns(dept.id)}
+                  showDeptCol={false}
+                  onDelete={(p) => setPeople((prev) => prev.filter((x) => x.id !== p.id))}
+                />
+              </div>
+            );
+          })}
+          {groupedByDept._none && (
+            <div className="people-section">
+              <h2 className="people-section-title">Unassigned</h2>
+              <PeopleTable
+                people={groupedByDept._none}
+                ppeColumns={[]}
+                showDeptCol
+                onDelete={(p) => setPeople((prev) => prev.filter((x) => x.id !== p.id))}
+              />
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          <PeopleTable
+            people={filtered}
+            ppeColumns={[]}
+            showDeptCol
+            onDelete={(p) => setPeople((prev) => prev.filter((x) => x.id !== p.id))}
+          />
+          {filtered.length === 0 && <p className="muted table-empty">No people found</p>}
+        </>
+      )}
     </div>
   );
 }

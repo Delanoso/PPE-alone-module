@@ -3,9 +3,23 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import './PersonForm.css';
 
-const OVERALL_PANTS_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
-const SAFETYBOOT_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
-const VEST_AND_SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'];
+const TROUSER_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
+const SHOE_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
+const GLOVE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const HELMET_SIZES = ['S', 'M', 'L', 'XL'];
+
+const SIZE_OPTIONS = {
+  coverall_size: TROUSER_SIZES,
+  shoe_size: SHOE_SIZES,
+  reflective_vest_size: CLOTHING_SIZES,
+  clothing_size: CLOTHING_SIZES,
+  jacket_size: CLOTHING_SIZES,
+  trouser_size: TROUSER_SIZES,
+  glove_size: GLOVE_SIZES,
+  helmet_size: HELMET_SIZES,
+  rain_suit_size: CLOTHING_SIZES,
+};
 
 export default function PersonForm() {
   const { id } = useParams();
@@ -20,10 +34,7 @@ export default function PersonForm() {
     department_id: '',
     sub_department_id: '',
     job_title: 'Driver',
-    coverall_size: '',
-    shoe_size: '',
-    reflective_vest_size: '',
-    clothing_size: '',
+    ...Object.fromEntries(Object.keys(SIZE_OPTIONS).map((k) => [k, ''])),
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,6 +67,9 @@ export default function PersonForm() {
         .then((r) => {
           const p = r.data;
           const sizes = p.size_profile || {};
+          const sizeDefaults = Object.fromEntries(
+            Object.keys(SIZE_OPTIONS).map((k) => [k, sizes[k] || ''])
+          );
           setForm({
             employee_number: p.employee_number || '',
             first_name: p.first_name || '',
@@ -64,10 +78,7 @@ export default function PersonForm() {
             department_id: p.department_id || '',
             sub_department_id: p.sub_department_id || '',
             job_title: p.job_title || 'Driver',
-            coverall_size: sizes.coverall_size || '',
-            shoe_size: sizes.shoe_size || '',
-            reflective_vest_size: sizes.reflective_vest_size || '',
-            clothing_size: sizes.clothing_size || '',
+            ...sizeDefaults,
           });
         })
         .catch((e) => setError(e.message))
@@ -84,6 +95,9 @@ export default function PersonForm() {
     });
   };
 
+  const selectedDept = departments.find((d) => d.id === form.department_id);
+  const ppeItems = selectedDept?.ppe_items || [];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -97,11 +111,10 @@ export default function PersonForm() {
         department_id: form.department_id,
         sub_department_id: form.sub_department_id,
         job_title: form.job_title?.trim() || null,
-        coverall_size: form.coverall_size || undefined,
-        shoe_size: form.shoe_size || undefined,
-        reflective_vest_size: form.reflective_vest_size || undefined,
-        clothing_size: form.clothing_size || undefined,
       };
+      Object.keys(SIZE_OPTIONS).forEach((k) => {
+        if (form[k]) payload[k] = form[k];
+      });
       if (isEdit) {
         await api(`/people/${id}`, { method: 'PATCH', body: payload });
       } else {
@@ -174,43 +187,28 @@ export default function PersonForm() {
 
         <section className="form-section">
           <h2>PPE sizes</h2>
+          <p className="form-hint">
+            {ppeItems.length > 0
+              ? 'Enter sizes for the PPE items assigned to this department.'
+              : 'Select a department to see its PPE size fields.'}
+          </p>
           <div className="form-row grid-3">
-            <label>
-              <span>Overall pants size</span>
-              <select name="coverall_size" value={form.coverall_size} onChange={handleChange}>
-                <option value="">-</option>
-                {OVERALL_PANTS_SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Safety boot size</span>
-              <select name="shoe_size" value={form.shoe_size} onChange={handleChange}>
-                <option value="">-</option>
-                {SAFETYBOOT_SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Reflector vest size</span>
-              <select name="reflective_vest_size" value={form.reflective_vest_size} onChange={handleChange}>
-                <option value="">-</option>
-                {VEST_AND_SHIRT_SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Shirt size</span>
-              <select name="clothing_size" value={form.clothing_size} onChange={handleChange}>
-                <option value="">-</option>
-                {VEST_AND_SHIRT_SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </label>
+            {ppeItems.map((item) => {
+              const sizeKey = item.size_key;
+              if (!sizeKey || !item.size_required) return null;
+              const options = SIZE_OPTIONS[sizeKey] || CLOTHING_SIZES;
+              return (
+                <label key={item.id}>
+                  <span>{item.name}</span>
+                  <select name={sizeKey} value={form[sizeKey] || ''} onChange={handleChange}>
+                    <option value="">-</option>
+                    {options.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </label>
+              );
+            })}
           </div>
         </section>
 

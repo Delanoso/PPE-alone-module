@@ -16,11 +16,28 @@ const DEPARTMENTS_DATA = [
 
 const PPE_CATEGORIES = ['Head Protection', 'Eye Protection', 'Face Protection', 'Hearing Protection', 'Respiratory Protection', 'Hand Protection', 'Body Protection', 'High Visibility Wear', 'Foot Protection', 'Fall Protection', 'Weather Protection', 'Hygiene and Disposable'];
 
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'];
+const TROUSER_SIZES = Array.from({ length: 29 }, (_, i) => String(28 + i));
+const SHOE_SIZES = Array.from({ length: 12 }, (_, i) => String(4 + i));
+const GLOVE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const HELMET_SIZES = ['S', 'M', 'L', 'XL'];
+
 const PPE_ITEMS = [
-  { sku: 'PANTS-001', name: 'Overall pants', category: 'Body Protection', sizeKey: 'coverall_size', sizeRequired: true, sizes: Array.from({ length: 29 }, (_, i) => String(28 + i)) },
-  { sku: 'BOOT-001', name: 'Safety boots', category: 'Foot Protection', sizeKey: 'shoe_size', sizeRequired: true, sizes: Array.from({ length: 12 }, (_, i) => String(4 + i)) },
-  { sku: 'VEST-001', name: 'Reflector vest', category: 'High Visibility Wear', sizeKey: 'reflective_vest_size', sizeRequired: true, sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'] },
-  { sku: 'SHIRT-001', name: 'Shirt', category: 'Body Protection', sizeKey: 'clothing_size', sizeRequired: true, sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL', '5XL', '6XL', '7XL'] },
+  { sku: 'PANTS-001', name: 'Overall pants', category: 'Body Protection', sizeKey: 'coverall_size', sizeRequired: true, sizes: TROUSER_SIZES },
+  { sku: 'BOOT-001', name: 'Safety boots', category: 'Foot Protection', sizeKey: 'shoe_size', sizeRequired: true, sizes: SHOE_SIZES },
+  { sku: 'VEST-001', name: 'Reflector vest', category: 'High Visibility Wear', sizeKey: 'reflective_vest_size', sizeRequired: true, sizes: CLOTHING_SIZES },
+  { sku: 'SHIRT-001', name: 'Shirt', category: 'Body Protection', sizeKey: 'clothing_size', sizeRequired: true, sizes: CLOTHING_SIZES },
+  { sku: 'JACKET-001', name: 'Jacket', category: 'Body Protection', sizeKey: 'jacket_size', sizeRequired: true, sizes: CLOTHING_SIZES },
+  { sku: 'TROUSERS-001', name: 'Trousers', category: 'Body Protection', sizeKey: 'trouser_size', sizeRequired: true, sizes: TROUSER_SIZES },
+  { sku: 'GLOVES-001', name: 'Safety gloves', category: 'Hand Protection', sizeKey: 'glove_size', sizeRequired: true, sizes: GLOVE_SIZES },
+  { sku: 'HELMET-001', name: 'Safety helmet', category: 'Head Protection', sizeKey: 'helmet_size', sizeRequired: true, sizes: HELMET_SIZES },
+  { sku: 'RAIN-001', name: 'Rain suit', category: 'Weather Protection', sizeKey: 'rain_suit_size', sizeRequired: true, sizes: CLOTHING_SIZES },
+  { sku: 'COVERALL-001', name: 'Coveralls', category: 'Body Protection', sizeKey: 'coverall_size', sizeRequired: true, sizes: CLOTHING_SIZES },
+  { sku: 'GOGGLES-001', name: 'Safety goggles', category: 'Eye Protection', sizeKey: null, sizeRequired: false, sizes: [null] },
+  { sku: 'EAR-001', name: 'Ear defenders', category: 'Hearing Protection', sizeKey: null, sizeRequired: false, sizes: [null] },
+  { sku: 'SHIELD-001', name: 'Face shield', category: 'Face Protection', sizeKey: null, sizeRequired: false, sizes: [null] },
+  { sku: 'HIJACKET-001', name: 'High-vis jacket', category: 'High Visibility Wear', sizeKey: 'reflective_vest_size', sizeRequired: true, sizes: CLOTHING_SIZES },
+  { sku: 'BOOT2-001', name: 'Waterproof boots', category: 'Foot Protection', sizeKey: 'shoe_size', sizeRequired: true, sizes: SHOE_SIZES },
 ];
 
 export async function hashPassword(plain) {
@@ -297,6 +314,33 @@ export async function bootstrapNewCompany(companyId) {
   await prisma.stockLocation.create({
     data: { id: uuid(), code: 'MAIN-PPE', name: 'Main PPE Store', is_active: true, company_id: companyId },
   });
+}
+
+/** Ensure existing departments have PPE config. If a department has no DepartmentPpeItem, add default 4 items. */
+export async function ensureDepartmentPpeConfig() {
+  const companies = await prisma.company.findMany({ where: { status: 'ACTIVE' } });
+  const defaultNames = ['Overall pants', 'Safety boots', 'Reflector vest', 'Shirt'];
+  for (const company of companies) {
+    const depts = await prisma.department.findMany({ where: { company_id: company.id } });
+    for (const dept of depts) {
+      const count = await prisma.departmentPpeItem.count({ where: { department_id: dept.id } });
+      if (count > 0) continue;
+      const items = await prisma.ppeItem.findMany({
+        where: { company_id: company.id, name: { in: defaultNames } },
+        orderBy: { name: 'asc' },
+      });
+      for (let i = 0; i < items.length; i++) {
+        await prisma.departmentPpeItem.create({
+          data: {
+            id: uuid(),
+            department_id: dept.id,
+            ppe_item_id: items[i].id,
+            display_order: i,
+          },
+        }).catch(() => {});
+      }
+    }
+  }
 }
 
 /** Add Drivers/Warehouse/Office if missing (per company). */

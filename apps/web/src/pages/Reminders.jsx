@@ -2,8 +2,12 @@ import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import './Reminders.css';
 
-const DEFAULT_MESSAGE = (name, link) =>
-  `Hi ${name}, please submit your PPE sizes (overall pants, safety boot, reflector vest, shirt) here: ${link}`;
+const buildMessage = (name, link, ppeItemNames) => {
+  const items = Array.isArray(ppeItemNames) && ppeItemNames.length > 0
+    ? ppeItemNames.join(', ')
+    : 'overall pants, safety boot, reflector vest, shirt';
+  return `Hi ${name}, please submit your PPE sizes (${items}) here: ${link}`;
+};
 
 export default function Reminders() {
   const [drivers, setDrivers] = useState([]);
@@ -78,7 +82,7 @@ export default function Reminders() {
                           key={i}
                           type="button"
                           className="btn-whatsapp-sm"
-                          onClick={() => openWhatsApp(phone, DEFAULT_MESSAGE(d.full_name, d.link))}
+                          onClick={() => openWhatsApp(phone, buildMessage(d.full_name, d.link, d.ppe_item_names))}
                         >
                           Send to {d.phones.length > 1 ? `#${i + 1}` : 'WhatsApp'}
                         </button>

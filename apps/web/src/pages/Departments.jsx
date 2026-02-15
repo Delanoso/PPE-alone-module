@@ -4,14 +4,17 @@ import './Departments.css';
 
 export default function Departments() {
   const [departments, setDepartments] = useState([]);
+  const [ppeItems, setPpeItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(new Set());
   const [addingDept, setAddingDept] = useState(false);
   const [newDeptName, setNewDeptName] = useState('');
+  const [newDeptPpeIds, setNewDeptPpeIds] = useState([]);
   const [addingSub, setAddingSub] = useState(null);
   const [newSubName, setNewSubName] = useState('');
   const [editingDept, setEditingDept] = useState(null);
   const [editDeptName, setEditDeptName] = useState('');
+  const [editDeptPpeIds, setEditDeptPpeIds] = useState([]);
   const [editingSub, setEditingSub] = useState(null);
   const [editSubName, setEditSubName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -19,6 +22,7 @@ export default function Departments() {
 
   useEffect(() => {
     load();
+    api('/ppe/items').then((r) => setPpeItems(r.data || []));
   }, []);
 
   async function load() {
@@ -39,14 +43,19 @@ export default function Departments() {
     });
   };
 
+  const togglePpeSelection = (id, ids, setIds) => {
+    setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
   const handleAddDept = async (e) => {
     e?.preventDefault();
     if (!newDeptName.trim()) return;
     setError('');
     setSaving(true);
     try {
-      await api('/departments', { method: 'POST', body: { name: newDeptName.trim() } });
+      await api('/departments', { method: 'POST', body: { name: newDeptName.trim(), ppe_item_ids: newDeptPpeIds } });
       setNewDeptName('');
+      setNewDeptPpeIds([]);
       setAddingDept(false);
       await load();
     } catch (err) {
@@ -82,9 +91,10 @@ export default function Departments() {
     setError('');
     setSaving(true);
     try {
-      await api(`/departments/${editingDept}`, { method: 'PATCH', body: { name: editDeptName.trim() } });
+      await api(`/departments/${editingDept}`, { method: 'PATCH', body: { name: editDeptName.trim(), ppe_item_ids: editDeptPpeIds } });
       setEditingDept(null);
       setEditDeptName('');
+      setEditDeptPpeIds([]);
       await load();
     } catch (err) {
       setError(err.message || 'Failed to update department');
@@ -158,20 +168,39 @@ export default function Departments() {
       {error && <div className="form-error">{error}</div>}
 
       {addingDept && (
-        <form onSubmit={handleAddDept} className="dept-add-form">
-          <input
-            type="text"
-            placeholder="Department name (e.g. Drivers)"
-            value={newDeptName}
-            onChange={(e) => setNewDeptName(e.target.value)}
-            autoFocus
-          />
-          <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? 'Adding...' : 'Add'}
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => { setAddingDept(false); setNewDeptName(''); setError(''); }}>
-            Cancel
-          </button>
+        <form onSubmit={handleAddDept} className="dept-add-form dept-form-with-ppe">
+          <div className="dept-form-row">
+            <input
+              type="text"
+              placeholder="Department name (e.g. Drivers)"
+              value={newDeptName}
+              onChange={(e) => setNewDeptName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="dept-form-row">
+            <label className="ppe-select-label">PPE items for this department (only these will show on People page)</label>
+            <div className="ppe-checklist">
+              {ppeItems.map((item) => (
+                <label key={item.id} className="ppe-check-item">
+                  <input
+                    type="checkbox"
+                    checked={newDeptPpeIds.includes(item.id)}
+                    onChange={() => togglePpeSelection(item.id, newDeptPpeIds, setNewDeptPpeIds)}
+                  />
+                  <span>{item.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="dept-form-actions">
+            <button type="submit" className="btn-primary" disabled={saving}>
+              {saving ? 'Adding...' : 'Add'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => { setAddingDept(false); setNewDeptName(''); setNewDeptPpeIds([]); setError(''); }}>
+              Cancel
+            </button>
+          </div>
         </form>
       )}
 
@@ -182,16 +211,7 @@ export default function Departments() {
               <button type="button" className="dept-header" onClick={() => toggle(d.id)}>
                 <span className="dept-name">
                   {editingDept === d.id ? (
-                    <form onSubmit={handleEditDept} onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="text"
-                        value={editDeptName}
-                        onChange={(e) => setEditDeptName(e.target.value)}
-                        autoFocus
-                      />
-                      <button type="submit" className="btn-small">Save</button>
-                      <button type="button" className="btn-small" onClick={() => { setEditingDept(null); setEditDeptName(''); }}>Cancel</button>
-                    </form>
+                    <span className="dept-name-editing">{editDeptName}</span>
                   ) : (
                     d.name
                   )}
@@ -200,13 +220,45 @@ export default function Departments() {
               </button>
               {editingDept !== d.id && (
                 <div className="dept-actions">
-                  <button type="button" className="btn-link" onClick={(e) => { e.stopPropagation(); setEditingDept(d.id); setEditDeptName(d.name); }}>Edit</button>
+                  <button type="button" className="btn-link" onClick={(e) => { e.stopPropagation(); setEditingDept(d.id); setEditDeptName(d.name); setEditDeptPpeIds((d.ppe_items || []).map((i) => i.id)); if (!expanded.has(d.id)) toggle(d.id); }}>Edit</button>
                   <button type="button" className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDeleteDept(d); }}>Delete</button>
                 </div>
               )}
             </div>
-            {expanded.has(d.id) && (
+            {(expanded.has(d.id) || editingDept === d.id) && (
               <div className="dept-subs">
+                {editingDept === d.id && (
+                  <form onSubmit={handleEditDept} className="dept-edit-form" onClick={(e) => e.stopPropagation()}>
+                    <div className="dept-form-row">
+                      <label>Department name</label>
+                      <input
+                        type="text"
+                        value={editDeptName}
+                        onChange={(e) => setEditDeptName(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="dept-form-row">
+                      <label className="ppe-select-label">PPE items for this department</label>
+                      <div className="ppe-checklist">
+                        {ppeItems.map((item) => (
+                          <label key={item.id} className="ppe-check-item">
+                            <input
+                              type="checkbox"
+                              checked={editDeptPpeIds.includes(item.id)}
+                              onChange={() => togglePpeSelection(item.id, editDeptPpeIds, setEditDeptPpeIds)}
+                            />
+                            <span>{item.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="dept-form-actions">
+                      <button type="submit" className="btn-primary" disabled={saving}>Save</button>
+                      <button type="button" className="btn-secondary" onClick={() => { setEditingDept(null); setEditDeptName(''); setEditDeptPpeIds([]); }}>Cancel</button>
+                    </div>
+                  </form>
+                )}
                 {d.sub_departments?.length ? (
                   d.sub_departments.map((s) => (
                     <div key={s.id} className="sub-row">

@@ -114,3 +114,51 @@
   align-items: flex-start;
   gap: 1rem;
 }
+
+.dept-form-with-ppe,
+.dept-edit-form {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--bg-hover);
+  border-radius: 8px;
+}
+
+.dept-form-row {
+  margin-bottom: 1rem;
+}
+
+.dept-form-row label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.ppe-select-label {
+  font-weight: 500;
+  color: var(--text) !important;
+}
+
+.ppe-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.ppe-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.ppe-check-item input {
+  margin: 0;
+}
+
+.dept-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

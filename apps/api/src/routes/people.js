@@ -211,7 +211,7 @@ router.post('/', async (req, res) => {
 });
 
 const PERSON_FIELDS = ['employee_number', 'first_name', 'last_name', 'full_name', 'mobile_number', 'email', 'department_id', 'sub_department_id', 'job_title', 'status', 'employment_type'];
-const SIZE_KEYS = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size'];
+const SIZE_KEYS = ['coverall_size', 'shoe_size', 'reflective_vest_size', 'clothing_size', 'jacket_size', 'trouser_size', 'glove_size', 'helmet_size', 'rain_suit_size'];
 
 router.patch('/:id', async (req, res) => {
   const person = await prisma.person.findFirst({ where: { id: req.params.id, company_id: req.companyId } });

@@ -1,12 +1,42 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { getApiBase } from './api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => { try { const v = localStorage.getItem('ppe_user'); return v ? JSON.parse(v) : null; } catch { return null; } });
-  const [token, setToken] = useState(() => localStorage.getItem('ppe_token'));
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('ppe_token');
+    const storedUser = (() => { try { const v = localStorage.getItem('ppe_user'); return v ? JSON.parse(v) : null; } catch { return null; } })();
+    if (!storedToken || !storedUser) {
+      setLoading(false);
+      return;
+    }
+    fetch(`${getApiBase()}/api/v1/departments`, {
+      headers: { Authorization: `Bearer ${storedToken}`, 'ngrok-skip-browser-warning': 'true' },
+    })
+      .then((r) => {
+        if (r.status === 401) {
+          localStorage.removeItem('ppe_token');
+          localStorage.removeItem('ppe_user');
+          setUser(null);
+          setToken(null);
+        } else {
+          setUser(storedUser);
+          setToken(storedToken);
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('ppe_token');
+        localStorage.removeItem('ppe_user');
+        setUser(null);
+        setToken(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const login = async (username, password) => {
     setLoading(true);

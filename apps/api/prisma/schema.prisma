@@ -51,9 +51,22 @@ model Department {
   created_at  String?
   company_id  String?
 
-  company          Company?        @relation(fields: [company_id], references: [id])
-  subDepartments   SubDepartment[]
-  people           Person[]
+  company            Company?            @relation(fields: [company_id], references: [id])
+  subDepartments     SubDepartment[]
+  people             Person[]
+  departmentPpeItems DepartmentPpeItem[]
+}
+
+model DepartmentPpeItem {
+  id            String @id @default(uuid())
+  department_id String
+  ppe_item_id   String
+  display_order Int    @default(0)
+
+  department Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
+  ppeItem    PpeItem    @relation(fields: [ppe_item_id], references: [id], onDelete: Cascade)
+
+  @@unique([department_id, ppe_item_id])
 }
 
 model SubDepartment {
@@ -128,10 +141,11 @@ model PpeItem {
   is_active            Boolean @default(true)
   company_id           String?
 
-  company        Company?       @relation(fields: [company_id], references: [id])
-  category       PpeCategory    @relation(fields: [category_id], references: [id])
-  ppeIssueItems  PpeIssueItem[]
-  stockBalances  StockBalance[]
+  company              Company?            @relation(fields: [company_id], references: [id])
+  category             PpeCategory         @relation(fields: [category_id], references: [id])
+  ppeIssueItems        PpeIssueItem[]
+  stockBalances        StockBalance[]
+  departmentPpeItems   DepartmentPpeItem[]
 }
 
 model StockLocation {

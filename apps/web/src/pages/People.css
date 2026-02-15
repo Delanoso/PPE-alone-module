@@ -90,3 +90,20 @@
   padding: 2rem;
   text-align: center;
 }
+
+.people-by-dept {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.people-section {
+  margin-bottom: 1.5rem;
+}
+
+.people-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: var(--text);
+}
